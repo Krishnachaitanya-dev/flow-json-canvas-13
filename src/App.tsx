@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import Invoices from "./pages/Invoices";
 import PatientDetail from "./pages/PatientDetail";
 import RegisterPatient from "./pages/RegisterPatient";
+import CompactRegisterPatient from "./pages/CompactRegisterPatient";
 import PrivateRoute from "./components/PrivateRoute";
 import NotFound from "./pages/NotFound";
 
@@ -52,6 +53,12 @@ const App = () => (
               <Route path="/register-patient" element={
                 <PrivateRoute>
                   <RegisterPatient />
+                </PrivateRoute>
+              } />
+              
+              <Route path="/compact-register" element={
+                <PrivateRoute>
+                  <CompactRegisterPatient />
                 </PrivateRoute>
               } />
               

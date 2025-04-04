@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, User, Home, Users, FlaskConical, FileText, Receipt } from "lucide-react";
+import { LogOut, User, Home, Users, FlaskConical, FileText, Receipt, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ImportExportButtons from "./ImportExportButtons";
@@ -53,6 +53,22 @@ const Layout = ({ children, title }: LayoutProps) => {
       <header className="h-14 border-b flex items-center justify-between px-4">
         <div className="font-semibold text-lg">{title}</div>
         <div className="flex items-center space-x-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => navigate("/compact-register")}
+                >
+                  <UserPlus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Register Patient</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ImportExportButtons />
           <TooltipProvider>
             <Tooltip>
