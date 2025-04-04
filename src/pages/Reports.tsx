@@ -5,9 +5,9 @@ import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Check, FileText, Printer, CalendarIcon } from "lucide-react";
+import { Search, Check, FileText, CalendarIcon } from "lucide-react";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import PrintButton from "@/components/PrintButton";
 import { toast } from "sonner";
 import ReportPrintView from "@/components/ReportPrintView";
@@ -120,13 +120,6 @@ const Reports = () => {
     setIsPrintView(true);
   };
 
-  // Print-specific button component
-  const handlePrint = () => {
-    setTimeout(() => {
-      window.print();
-    }, 500);
-  };
-  
   // Reset date filters
   const clearDateFilters = () => {
     setDateFilterType("none");
@@ -301,15 +294,13 @@ const Reports = () => {
                   </div>
                   
                   {report.status === "Completed" && (
-                    <Button 
+                    <PrintButton 
                       variant="ghost" 
                       size="sm"
                       onClick={() => handlePrintView(report)}
                       className="flex items-center"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
+                      title="Print Report"
+                    />
                   )}
                   
                   <Button 
@@ -365,6 +356,7 @@ const Reports = () => {
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{currentReport?.status === "Completed" ? "Edit Test Results" : "Enter Test Results"}</DialogTitle>
+            <DialogDescription>Enter or modify test results below.</DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
@@ -430,15 +422,17 @@ const Reports = () => {
           <DialogFooter className="flex items-center justify-between">
             <div>
               {currentReport?.status === "Completed" && (
-                <Button 
+                <PrintButton 
                   variant="outline" 
                   size="sm"
-                  onClick={handlePrint}
+                  onClick={() => {
+                    setIsEditingReport(false);
+                    setTimeout(() => {
+                      handlePrintView(currentReport);
+                    }, 100);
+                  }}
                   className="flex items-center"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </Button>
+                />
               )}
             </div>
             <div className="flex space-x-2">
@@ -458,8 +452,9 @@ const Reports = () => {
       {/* Report Print View Dialog */}
       <Dialog open={isPrintView} onOpenChange={setIsPrintView}>
         <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white">
-          <DialogHeader className="print-hidden">
+          <DialogHeader className="print:hidden">
             <DialogTitle>Lab Report</DialogTitle>
+            <DialogDescription>Preview the report before printing.</DialogDescription>
           </DialogHeader>
           
           {currentReport && (
@@ -470,15 +465,8 @@ const Reports = () => {
                 test={labData.tests.find(t => t.id === currentReport.testId)!}
               />
               
-              <div className="flex justify-end mt-4 print-hidden">
-                <Button 
-                  variant="default" 
-                  onClick={handlePrint}
-                  className="flex items-center"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </Button>
+              <div className="flex justify-end mt-4 print:hidden">
+                <PrintButton />
               </div>
             </div>
           )}
