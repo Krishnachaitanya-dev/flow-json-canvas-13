@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, User, Home, Users, Vial, FileText, Receipt } from "lucide-react";
+import { LogOut, User, Home, Users, FlaskConical, FileText, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ImportExportButtons from "./ImportExportButtons";
@@ -10,7 +10,7 @@ import ImportExportButtons from "./ImportExportButtons";
 const menuItems = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
   { path: "/patients", label: "Patients", icon: Users },
-  { path: "/tests", label: "Tests", icon: Vial },
+  { path: "/tests", label: "Tests", icon: FlaskConical },
   { path: "/reports", label: "Reports", icon: FileText },
   { path: "/invoices", label: "Invoices", icon: Receipt },
 ];

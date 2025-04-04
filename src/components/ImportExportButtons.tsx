@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
 import { useLab } from "@/context/LabContext";
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const ImportExportButtons = () => {
   const { exportData, importData } = useLab();
