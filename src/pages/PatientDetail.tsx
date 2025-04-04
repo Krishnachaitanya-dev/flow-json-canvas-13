@@ -6,12 +6,13 @@ import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Phone, MapPin, Calendar, Edit, Trash, AlertCircle, Check, X } from "lucide-react";
+import { User, Phone, MapPin, Calendar, Edit, Trash, AlertCircle, Check, X, Printer, Plus } from "lucide-react";
 import PrintButton from "@/components/PrintButton";
 import { format, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ReportPrintView from "@/components/ReportPrintView";
 import {
   Table,
   TableBody,
@@ -32,13 +33,14 @@ import {
 const PatientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { labData, deletePatient, updateReport, updateInvoice } = useLab();
+  const { labData, deletePatient, updateReport, updateInvoice, addReport, addInvoice } = useLab();
   const [activeTab, setActiveTab] = useState("reports");
   
   // State for report editing
   const [isEditingReport, setIsEditingReport] = useState(false);
   const [currentReport, setCurrentReport] = useState<any>(null);
   const [reportResults, setReportResults] = useState<any[]>([]);
+  const [isPrintView, setIsPrintView] = useState(false);
   
   // State for invoice viewing/editing
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
@@ -49,6 +51,10 @@ const PatientDetail = () => {
     balanceAmount: "0",
     status: "Pending" as "Pending" | "Paid"
   });
+  
+  // State for adding new test/invoice
+  const [isAddingTest, setIsAddingTest] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState<string>("");
   
   // Find patient by ID
   const patient = labData.patients.find(p => p.id === id);
@@ -174,6 +180,59 @@ const PatientDetail = () => {
     
     return { invoice, testsDetails };
   };
+  
+  // Handle adding a new test
+  const handleAddTest = () => {
+    if (selectedTestId) {
+      // Create new report
+      const newReport = {
+        testId: selectedTestId,
+        patientId: id!,
+        date: new Date().toISOString().split('T')[0],
+        status: "Pending" as "Pending" | "Completed"
+      };
+      
+      // Create new invoice for the test
+      const selectedTest = labData.tests.find(t => t.id === selectedTestId);
+      if (selectedTest) {
+        const newInvoice = {
+          patientId: id!,
+          tests: [{ testId: selectedTestId, price: selectedTest.price }],
+          totalAmount: selectedTest.price,
+          discountPercentage: 0,
+          discountAmount: 0,
+          netAmount: selectedTest.price,
+          paymentMode: "Cash" as "Cash" | "Card" | "UPI" | "Insurance",
+          amountPaid: 0,
+          balanceAmount: selectedTest.price,
+          date: new Date().toISOString().split('T')[0],
+          status: "Pending" as "Pending" | "Paid",
+        };
+        
+        addReport(newReport);
+        addInvoice(newInvoice);
+        
+        setIsAddingTest(false);
+        setSelectedTestId("");
+        toast.success("Test added successfully");
+      }
+    } else {
+      toast.error("Please select a test");
+    }
+  };
+
+  // Handle print view for reports
+  const handlePrintView = (report: any) => {
+    setCurrentReport(report);
+    setIsPrintView(true);
+  };
+
+  // Handle printing reports
+  const handlePrint = () => {
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
 
   return (
     <Layout title={patient.fullName}>
@@ -250,7 +309,10 @@ const PatientDetail = () => {
         <TabsContent value="reports" className="space-y-4">
           <div className="flex justify-between mb-4">
             <h3 className="text-lg font-medium">Test Reports</h3>
-            <Button size="sm" onClick={() => navigate("/tests")}>Add Test</Button>
+            <Button size="sm" onClick={() => setIsAddingTest(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Test
+            </Button>
           </div>
           
           {patientReports.map(report => {
@@ -270,13 +332,23 @@ const PatientDetail = () => {
                     }`}>
                       {report.status}
                     </div>
+                    
+                    {report.status === "Completed" && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handlePrintView(report)}
+                      >
+                        View
+                      </Button>
+                    )}
+                    
                     <Button 
                       variant="outline" 
-                      size="sm" 
-                      className="ml-2"
+                      size="sm"
                       onClick={() => handleEditReport(report)}
                     >
-                      {report.status === "Completed" ? "View" : "Enter Results"}
+                      {report.status === "Completed" ? "Edit Results" : "Enter Results"}
                     </Button>
                   </div>
                 </div>
@@ -302,7 +374,15 @@ const PatientDetail = () => {
                       </TableBody>
                     </Table>
                     <div className="flex justify-end mt-4">
-                      <PrintButton />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handlePrintView(report)}
+                        className="flex items-center"
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Print
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -320,7 +400,10 @@ const PatientDetail = () => {
         <TabsContent value="invoices" className="space-y-4">
           <div className="flex justify-between mb-4">
             <h3 className="text-lg font-medium">Billing Information</h3>
-            <Button size="sm">Add Invoice</Button>
+            <Button size="sm" onClick={() => setIsAddingTest(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Invoice
+            </Button>
           </div>
           
           {patientInvoices.map(invoice => {
@@ -367,7 +450,7 @@ const PatientDetail = () => {
       <Dialog open={isEditingReport} onOpenChange={setIsEditingReport}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{currentReport?.status === "Completed" ? "View Report" : "Enter Test Results"}</DialogTitle>
+            <DialogTitle>{currentReport?.status === "Completed" ? "Edit Report" : "Enter Test Results"}</DialogTitle>
           </DialogHeader>
           
           <div className="py-4">
@@ -395,7 +478,6 @@ const PatientDetail = () => {
                         <Input 
                           value={result.parameter} 
                           onChange={(e) => handleResultChange(index, 'parameter', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -403,7 +485,6 @@ const PatientDetail = () => {
                         <Input 
                           value={result.value} 
                           onChange={(e) => handleResultChange(index, 'value', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -411,7 +492,6 @@ const PatientDetail = () => {
                         <Input 
                           value={result.referenceRange} 
                           onChange={(e) => handleResultChange(index, 'referenceRange', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -419,7 +499,6 @@ const PatientDetail = () => {
                         <Input 
                           value={result.unit} 
                           onChange={(e) => handleResultChange(index, 'unit', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                     </div>
@@ -429,22 +508,58 @@ const PatientDetail = () => {
             )}
           </div>
           
-          <DialogFooter className="flex items-center justify-between">
-            <div>
-              {currentReport?.status === "Completed" && <PrintButton />}
-            </div>
+          <DialogFooter className="flex items-center justify-end">
             <div className="flex space-x-2">
               <Button variant="outline" onClick={() => setIsEditingReport(false)}>
-                {currentReport?.status === "Completed" ? "Close" : "Cancel"}
+                Cancel
               </Button>
               
-              {currentReport?.status !== "Completed" && (
-                <Button onClick={handleSaveReport} className="bg-green-600 hover:bg-green-700">
-                  <Check className="h-4 w-4 mr-2" />
-                  Save & Mark Completed
-                </Button>
-              )}
+              <Button onClick={handleSaveReport} className="bg-green-600 hover:bg-green-700">
+                <Check className="h-4 w-4 mr-2" />
+                Save & Mark Completed
+              </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Test Dialog */}
+      <Dialog open={isAddingTest} onOpenChange={setIsAddingTest}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Test</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="test">Select Test</Label>
+                <Select 
+                  value={selectedTestId} 
+                  onValueChange={setSelectedTestId}
+                >
+                  <SelectTrigger id="test">
+                    <SelectValue placeholder="Select a test" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {labData.tests.map(test => (
+                      <SelectItem key={test.id} value={test.id}>
+                        {test.name} - ₹{test.price.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddingTest(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddTest}>
+              Add Test
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -476,7 +591,7 @@ const PatientDetail = () => {
                     </div>
                     <div className="text-right">
                       <img 
-                        src="/lovable-uploads/77794296-1445-47b0-9505-0bf52f9b1685.png" 
+                        src="/lovable-uploads/852c0452-f823-44bb-a2b4-9cccd3034379.png" 
                         alt="NVR Diagnostics" 
                         className="h-12 ml-auto" 
                       />
@@ -670,6 +785,36 @@ const PatientDetail = () => {
               </Button>
             )}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Report Print View Dialog */}
+      <Dialog open={isPrintView} onOpenChange={setIsPrintView}>
+        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white">
+          <DialogHeader className="print:hidden">
+            <DialogTitle>Lab Report</DialogTitle>
+          </DialogHeader>
+          
+          {currentReport && (
+            <div className="print:p-0">
+              <ReportPrintView
+                report={currentReport}
+                patient={patient}
+                test={labData.tests.find(t => t.id === currentReport.testId)!}
+              />
+              
+              <div className="flex justify-end mt-4 print:hidden">
+                <Button 
+                  variant="default" 
+                  onClick={handlePrint}
+                  className="flex items-center"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

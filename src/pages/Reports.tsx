@@ -5,11 +5,12 @@ import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Check } from "lucide-react";
+import { Search, Check, FileText, Printer } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import PrintButton from "@/components/PrintButton";
 import { toast } from "sonner";
+import ReportPrintView from "@/components/ReportPrintView";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ const Reports = () => {
   const [currentReport, setCurrentReport] = useState<any>(null);
   const [reportResults, setReportResults] = useState<any[]>([]);
   const [isEditingReport, setIsEditingReport] = useState(false);
+  const [isPrintView, setIsPrintView] = useState(false);
   
   // Filter reports based on search query
   const filteredReports = labData.reports.filter(report => {
@@ -59,6 +61,7 @@ const Reports = () => {
     setCurrentReport(report);
     setReportResults(initialResults);
     setIsEditingReport(true);
+    setIsPrintView(false);
   };
   
   // Handle saving report results
@@ -82,6 +85,20 @@ const Reports = () => {
     const updatedResults = [...reportResults];
     updatedResults[index] = { ...updatedResults[index], [field]: value };
     setReportResults(updatedResults);
+  };
+
+  // Handle print view
+  const handlePrintView = (report: any) => {
+    setCurrentReport(report);
+    setIsPrintView(true);
+  };
+
+  // Print-specific button component
+  const handlePrint = () => {
+    setIsPrintView(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
   return (
@@ -120,12 +137,25 @@ const Reports = () => {
                   }`}>
                     {report.status}
                   </div>
+                  
+                  {report.status === "Completed" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handlePrintView(report)}
+                      className="flex items-center"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
+                  )}
+                  
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleEditReport(report)}
                   >
-                    {report.status === "Completed" ? "View" : "Enter Results"}
+                    {report.status === "Completed" ? "Edit Results" : "Enter Results"}
                   </Button>
                 </div>
               </div>
@@ -170,7 +200,7 @@ const Reports = () => {
       <Dialog open={isEditingReport} onOpenChange={setIsEditingReport}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{currentReport?.status === "Completed" ? "View Report" : "Enter Test Results"}</DialogTitle>
+            <DialogTitle>{currentReport?.status === "Completed" ? "Edit Test Results" : "Enter Test Results"}</DialogTitle>
           </DialogHeader>
           
           <div className="py-4">
@@ -203,7 +233,6 @@ const Reports = () => {
                         <Input 
                           value={result.parameter} 
                           onChange={(e) => handleResultChange(index, 'parameter', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -211,7 +240,6 @@ const Reports = () => {
                         <Input 
                           value={result.value} 
                           onChange={(e) => handleResultChange(index, 'value', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -219,7 +247,6 @@ const Reports = () => {
                         <Input 
                           value={result.referenceRange} 
                           onChange={(e) => handleResultChange(index, 'referenceRange', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                       <div>
@@ -227,7 +254,6 @@ const Reports = () => {
                         <Input 
                           value={result.unit} 
                           onChange={(e) => handleResultChange(index, 'unit', e.target.value)}
-                          disabled={currentReport.status === "Completed"}
                         />
                       </div>
                     </div>
@@ -239,21 +265,59 @@ const Reports = () => {
           
           <DialogFooter className="flex items-center justify-between">
             <div>
-              {currentReport?.status === "Completed" && <PrintButton />}
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => setIsEditingReport(false)}>
-                {currentReport?.status === "Completed" ? "Close" : "Cancel"}
-              </Button>
-              
-              {currentReport?.status !== "Completed" && (
-                <Button onClick={handleSaveReport} className="bg-green-600 hover:bg-green-700">
-                  <Check className="h-4 w-4 mr-2" />
-                  Save & Mark Completed
+              {currentReport?.status === "Completed" && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handlePrint}
+                  className="flex items-center"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
                 </Button>
               )}
             </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={() => setIsEditingReport(false)}>
+                Cancel
+              </Button>
+              
+              <Button onClick={handleSaveReport} className="bg-green-600 hover:bg-green-700">
+                <Check className="h-4 w-4 mr-2" />
+                Save & Mark Completed
+              </Button>
+            </div>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Print View Dialog */}
+      <Dialog open={isPrintView} onOpenChange={setIsPrintView}>
+        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white">
+          <DialogHeader className="print:hidden">
+            <DialogTitle>Lab Report</DialogTitle>
+          </DialogHeader>
+          
+          {currentReport && (
+            <div className="print:p-0">
+              <ReportPrintView
+                report={currentReport}
+                patient={labData.patients.find(p => p.id === currentReport.patientId)!}
+                test={labData.tests.find(t => t.id === currentReport.testId)!}
+              />
+              
+              <div className="flex justify-end mt-4 print:hidden">
+                <Button 
+                  variant="default" 
+                  onClick={handlePrint}
+                  className="flex items-center"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
