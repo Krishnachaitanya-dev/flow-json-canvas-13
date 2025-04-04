@@ -19,12 +19,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { PaymentMode, Sex, Title } from "@/context/LabContext";
-import { Calendar } from "lucide-react";
+import { PaymentMode, Sex, Title, Test } from "@/context/LabContext";
+import { Calendar, Search, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CompactRegisterPatient = () => {
-  const { addPatient, labData } = useLab();
+  const { addPatient, labData, addInvoice, addReport } = useLab();
   const navigate = useNavigate();
   const currentDate = format(new Date(), "yyyy-MM-dd");
   
@@ -60,6 +60,13 @@ const CompactRegisterPatient = () => {
     remarks: ""
   });
 
+  // Selected tests state
+  const [selectedTests, setSelectedTests] = useState<Test[]>([]);
+  
+  // Search results
+  const [searchResults, setSearchResults] = useState<Test[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
   // Calculate discount and net amount when total or discount percentage changes
   useEffect(() => {
     const total = parseFloat(paymentData.totalAmount) || 0;
@@ -70,8 +77,8 @@ const CompactRegisterPatient = () => {
     
     setPaymentData(prev => ({
       ...prev,
-      discountAmount: discountAmt.toString(),
-      netAmount: net.toString()
+      discountAmount: discountAmt.toFixed(2),
+      netAmount: net.toFixed(2)
     }));
   }, [paymentData.totalAmount, paymentData.discountPercentage]);
   
@@ -82,9 +89,34 @@ const CompactRegisterPatient = () => {
     
     setPaymentData(prev => ({
       ...prev,
-      balanceAmount: (net - paid).toString()
+      balanceAmount: (net - paid).toFixed(2)
     }));
   }, [paymentData.netAmount, paymentData.amountPaid]);
+
+  // Update total amount when tests change
+  useEffect(() => {
+    const total = selectedTests.reduce((sum, test) => sum + test.price, 0);
+    setPaymentData(prev => ({
+      ...prev,
+      totalAmount: total.toFixed(2)
+    }));
+  }, [selectedTests]);
+
+  // Search tests when name or code changes
+  useEffect(() => {
+    if (testData.testName || testData.testCode) {
+      const results = labData.tests.filter(test => {
+        const nameMatch = test.name.toLowerCase().includes(testData.testName.toLowerCase());
+        const codeMatch = test.code.toLowerCase().includes(testData.testCode.toLowerCase());
+        return testData.testName ? nameMatch : codeMatch;
+      });
+      setSearchResults(results);
+      setShowResults(results.length > 0);
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  }, [testData.testName, testData.testCode, labData.tests]);
   
   // Handle patient form changes
   const handlePatientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -101,6 +133,20 @@ const CompactRegisterPatient = () => {
   const handleTestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTestData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Add test to selected tests
+  const handleAddTest = (test: Test) => {
+    if (!selectedTests.some(t => t.id === test.id)) {
+      setSelectedTests(prev => [...prev, test]);
+    }
+    setTestData({ selectedPackage: "", testName: "", testCode: "" });
+    setShowResults(false);
+  };
+
+  // Remove test from selected tests
+  const handleRemoveTest = (testId: string) => {
+    setSelectedTests(prev => prev.filter(test => test.id !== testId));
   };
   
   // Handle payment form changes
@@ -119,8 +165,13 @@ const CompactRegisterPatient = () => {
       return;
     }
     
+    if (selectedTests.length === 0) {
+      toast.error("Please select at least one test");
+      return;
+    }
+    
     // Add patient
-    addPatient({
+    const newPatient = {
       title: patientData.title,
       fullName: patientData.fullName,
       mobile: patientData.mobile,
@@ -129,10 +180,52 @@ const CompactRegisterPatient = () => {
       sex: patientData.sex,
       address: patientData.address,
       regDate: patientData.regDate,
-    });
+    };
     
-    // Navigate to patients page
-    navigate("/patients");
+    addPatient(newPatient);
+    
+    // Get the newly created patient's ID
+    const createdPatient = labData.patients.find(
+      p => p.mobile === patientData.mobile && p.fullName === patientData.fullName
+    );
+    
+    if (createdPatient) {
+      // Create invoice for the patient
+      const invoiceData = {
+        patientId: createdPatient.id,
+        tests: selectedTests.map(test => ({ testId: test.id, price: test.price })),
+        totalAmount: parseFloat(paymentData.totalAmount),
+        discountPercentage: parseFloat(paymentData.discountPercentage),
+        discountAmount: parseFloat(paymentData.discountAmount),
+        netAmount: parseFloat(paymentData.netAmount),
+        paymentMode: paymentData.paymentMode,
+        amountPaid: parseFloat(paymentData.amountPaid),
+        balanceAmount: parseFloat(paymentData.balanceAmount),
+        date: currentDate,
+        status: parseFloat(paymentData.balanceAmount) > 0 ? "Pending" : "Paid" as "Pending" | "Paid",
+        remarks: paymentData.remarks
+      };
+      
+      addInvoice(invoiceData);
+      
+      // Create reports for each test
+      selectedTests.forEach(test => {
+        const reportData = {
+          testId: test.id,
+          patientId: createdPatient.id,
+          date: currentDate,
+          status: "Pending" as "Pending" | "Completed"
+        };
+        
+        addReport(reportData);
+      });
+      
+      // Navigate to patient detail page
+      navigate(`/patients/${createdPatient.id}`);
+    } else {
+      // Navigate to patients page if something went wrong
+      navigate("/patients");
+    }
   };
 
   return (
@@ -369,30 +462,95 @@ const CompactRegisterPatient = () => {
                   </Select>
                 </div>
                 
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <Label htmlFor="testName" className="text-sm">Test Name</Label>
-                  <Input
-                    id="testName"
-                    name="testName"
-                    placeholder="Search by test name"
-                    value={testData.testName}
-                    onChange={handleTestChange}
-                    className="bg-yellow-50 border-gray-200"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="testName"
+                      name="testName"
+                      placeholder="Search by test name"
+                      value={testData.testName}
+                      onChange={handleTestChange}
+                      className="bg-yellow-50 border-gray-200 pr-8"
+                    />
+                    <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                  
+                  {showResults && testData.testName && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-48 overflow-auto">
+                      {searchResults.map(test => (
+                        <div
+                          key={test.id}
+                          className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                          onClick={() => handleAddTest(test)}
+                        >
+                          <span>{test.name}</span>
+                          <span className="text-xs text-gray-500">₹{test.price.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <Label htmlFor="testCode" className="text-sm">Test Code</Label>
-                  <Input
-                    id="testCode"
-                    name="testCode"
-                    placeholder="Enter test code"
-                    value={testData.testCode}
-                    onChange={handleTestChange}
-                    className="bg-yellow-50 border-gray-200"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="testCode"
+                      name="testCode"
+                      placeholder="Enter test code"
+                      value={testData.testCode}
+                      onChange={handleTestChange}
+                      className="bg-yellow-50 border-gray-200 pr-8"
+                    />
+                    <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                  
+                  {showResults && testData.testCode && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-48 overflow-auto">
+                      {searchResults.map(test => (
+                        <div
+                          key={test.id}
+                          className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                          onClick={() => handleAddTest(test)}
+                        >
+                          <span>{test.code}</span>
+                          <span className="text-xs text-gray-500">₹{test.price.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
+              
+              {/* Selected Tests */}
+              {selectedTests.length > 0 && (
+                <div className="mt-4">
+                  <Label className="text-sm mb-2 block">Selected Tests</Label>
+                  <div className="space-y-2 max-h-32 overflow-auto">
+                    {selectedTests.map(test => (
+                      <div key={test.id} className="flex justify-between items-center p-2 bg-yellow-50 border border-gray-200 rounded">
+                        <div>
+                          <div className="font-medium">{test.name}</div>
+                          <div className="text-xs text-gray-500">Code: {test.code}</div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">₹{test.price.toFixed(2)}</span>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-gray-500 hover:text-red-500"
+                            onClick={() => handleRemoveTest(test.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Payment Information Section */}
@@ -408,7 +566,8 @@ const CompactRegisterPatient = () => {
                     type="number"
                     value={paymentData.totalAmount}
                     onChange={handlePaymentChange}
-                    className="bg-yellow-50 border-gray-200"
+                    className="bg-gray-50"
+                    readOnly={selectedTests.length > 0}
                   />
                 </div>
                 
