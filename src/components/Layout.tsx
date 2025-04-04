@@ -48,7 +48,7 @@ const Layout = ({ children, title }: LayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative pb-16">
       {/* Top header */}
       <header className="h-14 border-b flex items-center justify-between px-4">
         <div className="font-semibold text-lg">{title}</div>
@@ -90,7 +90,7 @@ const Layout = ({ children, title }: LayoutProps) => {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-auto">
         {title === "Dashboard" && (
           <div className="p-6 border-b">
             <h1 className="text-2xl font-semibold mb-1">Hello, {user?.name}</h1>
@@ -102,8 +102,8 @@ const Layout = ({ children, title }: LayoutProps) => {
         </main>
       </div>
 
-      {/* Bottom navigation (mobile) */}
-      <nav className="h-16 border-t grid grid-cols-5 bg-background">
+      {/* Bottom navigation (mobile) - now fixed to bottom */}
+      <nav className="h-16 border-t grid grid-cols-5 bg-background fixed bottom-0 left-0 right-0 z-50">
         {menuItems.map((item) => (
           <button
             key={item.path}
