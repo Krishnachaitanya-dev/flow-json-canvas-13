@@ -5,8 +5,8 @@ import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Check, FileText, Printer } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Search, Check, FileText, Printer, CalendarIcon } from "lucide-react";
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import PrintButton from "@/components/PrintButton";
 import { toast } from "sonner";
@@ -19,6 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const Reports = () => {
   const { labData, updateReport } = useLab();
@@ -28,16 +35,36 @@ const Reports = () => {
   const [isEditingReport, setIsEditingReport] = useState(false);
   const [isPrintView, setIsPrintView] = useState(false);
   
-  // Filter reports based on search query
+  // Date filter states
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterStartDate, setFilterStartDate] = useState<Date | undefined>(undefined);
+  const [filterEndDate, setFilterEndDate] = useState<Date | undefined>(undefined);
+  const [dateFilterType, setDateFilterType] = useState<"none" | "single" | "range">("none");
+  
+  // Filter reports based on search query and date filters
   const filteredReports = labData.reports.filter(report => {
     const query = searchQuery.toLowerCase();
     const patient = labData.patients.find(p => p.id === report.patientId);
     const test = labData.tests.find(t => t.id === report.testId);
+    const reportDate = parseISO(report.date);
     
-    return (
+    // Text search filter
+    const matchesText = 
       patient?.fullName.toLowerCase().includes(query) ||
-      test?.name.toLowerCase().includes(query)
-    );
+      test?.name.toLowerCase().includes(query);
+    
+    // Date filter logic
+    let matchesDate = true;
+    if (dateFilterType === "single" && filterDate) {
+      matchesDate = isSameDay(reportDate, filterDate);
+    } else if (dateFilterType === "range" && filterStartDate && filterEndDate) {
+      matchesDate = isWithinInterval(reportDate, {
+        start: startOfDay(filterStartDate),
+        end: endOfDay(filterEndDate)
+      });
+    }
+    
+    return matchesText && matchesDate;
   });
 
   // Handle report edit
@@ -95,15 +122,22 @@ const Reports = () => {
 
   // Print-specific button component
   const handlePrint = () => {
-    setIsPrintView(true);
     setTimeout(() => {
       window.print();
     }, 500);
   };
+  
+  // Reset date filters
+  const clearDateFilters = () => {
+    setDateFilterType("none");
+    setFilterDate(undefined);
+    setFilterStartDate(undefined);
+    setFilterEndDate(undefined);
+  };
 
   return (
     <Layout title="Reports">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -112,6 +146,134 @@ const Reports = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Single date filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={dateFilterType === "single" ? "default" : "outline"} 
+                className="flex items-center"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filterDate ? format(filterDate, "PP") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={filterDate}
+                onSelect={(date) => {
+                  setFilterDate(date);
+                  setDateFilterType(date ? "single" : "none");
+                }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+              <div className="p-3 border-t border-border flex justify-between">
+                <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+                  Clear
+                </Button>
+                <Button variant="default" size="sm" onClick={() => {
+                  setDateFilterType("single");
+                }}>
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Date range filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={dateFilterType === "range" ? "default" : "outline"}
+                className="flex items-center"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilterType === "range" && filterStartDate && filterEndDate 
+                  ? `${format(filterStartDate, "dd/MM")} - ${format(filterEndDate, "dd/MM")}`
+                  : "Date range"
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <div className="p-3 border-b border-border">
+                <div className="grid gap-2">
+                  <Label>From</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterStartDate ? format(filterStartDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterStartDate}
+                        onSelect={setFilterStartDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid gap-2 mt-2">
+                  <Label>To</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterEndDate ? format(filterEndDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterEndDate}
+                        onSelect={setFilterEndDate}
+                        disabled={(date) => 
+                          filterStartDate ? date < filterStartDate : false
+                        }
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex justify-between mt-4">
+                  <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+                    Clear
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => {
+                      if (filterStartDate && filterEndDate) {
+                        setDateFilterType("range");
+                      }
+                    }}
+                    disabled={!filterStartDate || !filterEndDate}
+                  >
+                    Apply Range
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear filters button */}
+          {dateFilterType !== "none" && (
+            <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+              Clear filters
+            </Button>
+          )}
         </div>
       </div>
       
@@ -189,9 +351,11 @@ const Reports = () => {
         
         {filteredReports.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {searchQuery 
-              ? "No reports match your search criteria" 
-              : "No reports found."}
+            {dateFilterType !== "none"
+              ? "No reports match your date filter"
+              : searchQuery 
+                ? "No reports match your search criteria" 
+                : "No reports found."}
           </div>
         )}
       </div>
@@ -294,19 +458,19 @@ const Reports = () => {
       {/* Report Print View Dialog */}
       <Dialog open={isPrintView} onOpenChange={setIsPrintView}>
         <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white">
-          <DialogHeader className="print:hidden">
+          <DialogHeader className="print-hidden">
             <DialogTitle>Lab Report</DialogTitle>
           </DialogHeader>
           
           {currentReport && (
-            <div className="print:p-0">
+            <div className="print-container">
               <ReportPrintView
                 report={currentReport}
                 patient={labData.patients.find(p => p.id === currentReport.patientId)!}
                 test={labData.tests.find(t => t.id === currentReport.testId)!}
               />
               
-              <div className="flex justify-end mt-4 print:hidden">
+              <div className="flex justify-end mt-4 print-hidden">
                 <Button 
                   variant="default" 
                   onClick={handlePrint}

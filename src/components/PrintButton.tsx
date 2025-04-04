@@ -8,10 +8,15 @@ interface PrintButtonProps {
 
 export const PrintButton = ({ onClick }: PrintButtonProps) => {
   const handlePrint = () => {
+    // Execute the onClick handler if provided
     if (onClick) {
       onClick();
     }
-    window.print();
+    
+    // Add a small delay to allow any UI updates to complete
+    setTimeout(() => {
+      window.print();
+    }, 300);
   };
 
   return (

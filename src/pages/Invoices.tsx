@@ -4,25 +4,53 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, Receipt } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Search, ChevronRight, Receipt, CalendarIcon } from "lucide-react";
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import PrintButton from "@/components/PrintButton";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const Invoices = () => {
   const { labData } = useLab();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   
-  // Filter invoices based on search query
+  // Date filter states
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterStartDate, setFilterStartDate] = useState<Date | undefined>(undefined);
+  const [filterEndDate, setFilterEndDate] = useState<Date | undefined>(undefined);
+  const [dateFilterType, setDateFilterType] = useState<"none" | "single" | "range">("none");
+  
+  // Filter invoices based on search query and date filters
   const filteredInvoices = labData.invoices.filter(invoice => {
     const query = searchQuery.toLowerCase();
     const patient = labData.patients.find(p => p.id === invoice.patientId);
+    const invoiceDate = parseISO(invoice.date);
     
-    return (
+    // Text search filter
+    const matchesText = 
       patient?.fullName.toLowerCase().includes(query) ||
-      invoice.id.toLowerCase().includes(query)
-    );
+      invoice.id.toLowerCase().includes(query);
+    
+    // Date filter logic
+    let matchesDate = true;
+    if (dateFilterType === "single" && filterDate) {
+      matchesDate = isSameDay(invoiceDate, filterDate);
+    } else if (dateFilterType === "range" && filterStartDate && filterEndDate) {
+      matchesDate = isWithinInterval(invoiceDate, {
+        start: startOfDay(filterStartDate),
+        end: endOfDay(filterEndDate)
+      });
+    }
+    
+    return matchesText && matchesDate;
   });
   
   // Get invoice details
@@ -39,9 +67,24 @@ const Invoices = () => {
     return { invoice, patient, testsDetails };
   };
 
+  // Handle print
+  const handlePrint = () => {
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+  
+  // Reset date filters
+  const clearDateFilters = () => {
+    setDateFilterType("none");
+    setFilterDate(undefined);
+    setFilterStartDate(undefined);
+    setFilterEndDate(undefined);
+  };
+
   return (
     <Layout title="Invoices">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -50,6 +93,134 @@ const Invoices = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Single date filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={dateFilterType === "single" ? "default" : "outline"} 
+                className="flex items-center"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filterDate ? format(filterDate, "PP") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={filterDate}
+                onSelect={(date) => {
+                  setFilterDate(date);
+                  setDateFilterType(date ? "single" : "none");
+                }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+              <div className="p-3 border-t border-border flex justify-between">
+                <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+                  Clear
+                </Button>
+                <Button variant="default" size="sm" onClick={() => {
+                  setDateFilterType("single");
+                }}>
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Date range filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={dateFilterType === "range" ? "default" : "outline"}
+                className="flex items-center"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilterType === "range" && filterStartDate && filterEndDate 
+                  ? `${format(filterStartDate, "dd/MM")} - ${format(filterEndDate, "dd/MM")}`
+                  : "Date range"
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <div className="p-3 border-b border-border">
+                <div className="grid gap-2">
+                  <Label>From</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterStartDate ? format(filterStartDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterStartDate}
+                        onSelect={setFilterStartDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid gap-2 mt-2">
+                  <Label>To</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterEndDate ? format(filterEndDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterEndDate}
+                        onSelect={setFilterEndDate}
+                        disabled={(date) => 
+                          filterStartDate ? date < filterStartDate : false
+                        }
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex justify-between mt-4">
+                  <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+                    Clear
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => {
+                      if (filterStartDate && filterEndDate) {
+                        setDateFilterType("range");
+                      }
+                    }}
+                    disabled={!filterStartDate || !filterEndDate}
+                  >
+                    Apply Range
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear filters button */}
+          {dateFilterType !== "none" && (
+            <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+              Clear filters
+            </Button>
+          )}
         </div>
       </div>
       
@@ -86,9 +257,11 @@ const Invoices = () => {
         
         {filteredInvoices.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {searchQuery 
-              ? "No invoices match your search criteria" 
-              : "No invoices found."}
+            {dateFilterType !== "none"
+              ? "No invoices match your date filter"
+              : searchQuery 
+                ? "No invoices match your search criteria" 
+                : "No invoices found."}
           </div>
         )}
       </div>
@@ -98,14 +271,23 @@ const Invoices = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <CardContent className="pt-6">
-              <div className="flex justify-between mb-6">
+              <div className="flex justify-between mb-6 print-hidden">
                 <h2 className="text-xl font-semibold">Invoice</h2>
                 <div className="flex space-x-2">
-                  <PrintButton />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePrint}
+                    className="print-hidden"
+                    title="Print"
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => setSelectedInvoice(null)}
+                    className="print-hidden"
                   >
                     &times;
                   </Button>
