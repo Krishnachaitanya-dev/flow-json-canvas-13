@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, User, Home, Users, FlaskConical, FileText, Receipt, UserPlus } from "lucide-react";
+import { LogOut, User, Home, Users, FlaskConical, FileText, Receipt, UserPlus, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ImportExportButtons from "./ImportExportButtons";
@@ -13,6 +13,7 @@ const menuItems = [
   { path: "/tests", label: "Tests", icon: FlaskConical },
   { path: "/reports", label: "Reports", icon: FileText },
   { path: "/invoices", label: "Invoices", icon: Receipt },
+  { path: "/flow-canvas", label: "Flow Canvas", icon: Share2 },
 ];
 
 interface LayoutProps {
@@ -103,7 +104,7 @@ const Layout = ({ children, title }: LayoutProps) => {
       </div>
 
       {/* Bottom navigation (mobile) - now fixed to bottom */}
-      <nav className="h-16 border-t grid grid-cols-5 bg-background fixed bottom-0 left-0 right-0 z-50">
+      <nav className="h-16 border-t grid grid-cols-6 bg-background fixed bottom-0 left-0 right-0 z-50">
         {menuItems.map((item) => (
           <button
             key={item.path}
