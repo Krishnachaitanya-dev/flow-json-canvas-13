@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, Receipt, CalendarIcon } from "lucide-react";
+import { Search, ChevronRight, Receipt, CalendarIcon ,Printer } from "lucide-react";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import PrintButton from "@/components/PrintButton";
