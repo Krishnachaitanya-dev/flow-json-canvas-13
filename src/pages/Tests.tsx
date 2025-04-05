@@ -3,8 +3,7 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag } from "lucide-react";
-// import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag, Flask } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag, Clipboard } from "lucide-react";
 // import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -120,7 +119,7 @@ const Tests = () => {
             <CardHeader className={`p-4 text-white ${getCategoryColor(test.category)}`}>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg font-medium">{test.name}</CardTitle>
-                <Flask className="h-5 w-5 text-white" />
+                <Clipboard className="h-5 w-5 text-white" />
               </div>
               <p className="text-sm text-white/80 mt-1 flex items-center gap-1">
                 <Tag className="h-3 w-3" /> {test.category}
@@ -164,7 +163,7 @@ const Tests = () => {
         {filteredTests.length === 0 && (
           <div className="col-span-full bg-white rounded-xl border border-slate-100 p-8 text-center">
             <div className="w-16 h-16 mx-auto bg-futuristic-teal/10 rounded-full flex items-center justify-center">
-              <Flask className="h-8 w-8 text-futuristic-teal" />
+              <Clipboard className="h-8 w-8 text-futuristic-teal" />
             </div>
             <h3 className="mt-4 text-lg font-medium">No tests found</h3>
             <p className="mt-2 text-muted-foreground">
