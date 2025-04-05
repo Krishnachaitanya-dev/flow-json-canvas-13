@@ -1,428 +1,414 @@
 
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { useLab } from "@/context/LabContext";
+import { useLab, Patient, Report, Test, Invoice } from "@/context/LabContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { format, parseISO } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, Mail, Phone, Home, FilePlus, FileEdit, User, Calendar } from "lucide-react";
-import ReportPrintView from "@/components/ReportPrintView";
-import { Test, Report } from "@/context/LabContext";
-import EditTestDialog from "@/components/EditTestDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Calendar,
+  User, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  FileText, 
+  Receipt, 
+  Plus, 
+  FileSpreadsheet,
+  Clock,
+  Check,
+  Pen,
+  Calendar as CalendarIcon
+} from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import AddTestDialog from "@/components/AddTestDialog";
 
 const PatientDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { labData, updateReport, deleteReport } = useLab();
+  const navigate = useNavigate();
+  const { labData, updateReport } = useLab();
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [patientReports, setPatientReports] = useState<Report[]>([]);
+  const [patientInvoices, setPatientInvoices] = useState<Invoice[]>([]);
+  const [addTestDialogOpen, setAddTestDialogOpen] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<"reports" | "invoices">("reports");
-  const [selectedReportForView, setSelectedReportForView] = useState<string | null>(null);
-  const [selectedReportForEdit, setSelectedReportForEdit] = useState<Report | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
-
-  // For test editing
-  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  useEffect(() => {
+    if (id) {
+      const foundPatient = labData.patients.find(p => p.id === id);
+      if (foundPatient) {
+        setPatient(foundPatient);
+        
+        // Get patient's reports
+        const reports = labData.reports.filter(r => r.patientId === id);
+        setPatientReports(reports);
+        
+        // Get patient's invoices
+        const invoices = labData.invoices.filter(i => i.patientId === id);
+        setPatientInvoices(invoices);
+      } else {
+        toast.error("Patient not found");
+        navigate("/patients");
+      }
+    }
+  }, [id, labData, navigate]);
   
-  const patient = labData.patients.find(p => p.id === id);
+  // Function to get the test name from testId
+  const getTestName = (testId: string) => {
+    const test = labData.tests.find(t => t.id === testId);
+    return test ? test.name : "Unknown Test";
+  };
+  
+  // Function to mark report as completed
+  const markReportAsCompleted = (reportId: string) => {
+    const report = patientReports.find(r => r.id === reportId);
+    if (report) {
+      updateReport({
+        ...report,
+        status: "Completed"
+      });
+      
+      toast.success("Report marked as completed");
+      
+      // Update local state
+      setPatientReports(prev => prev.map(r => 
+        r.id === reportId ? { ...r, status: "Completed" } : r
+      ));
+    }
+  };
+  
+  // Function to handle new test added
+  const handleTestAdded = () => {
+    // Refresh the reports
+    if (id) {
+      const reports = labData.reports.filter(r => r.patientId === id);
+      setPatientReports(reports);
+      
+      // Refresh the invoices
+      const invoices = labData.invoices.filter(i => i.patientId === id);
+      setPatientInvoices(invoices);
+    }
+  };
   
   if (!patient) {
     return (
       <Layout title="Patient Details">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Patient Not Found</h2>
-          <p className="text-muted-foreground mb-4">The patient you are looking for does not exist.</p>
-          <Link to="/patients">
-            <Button>Back to Patients</Button>
-          </Link>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="h-8 w-8 border-4 border-t-futuristic-purple border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-500">Loading patient details...</p>
+          </div>
         </div>
       </Layout>
     );
   }
-  
-  // Get patient reports
-  const reports = labData.reports.filter(r => r.patientId === patient.id);
-  
-  // Get patient invoices
-  const invoices = labData.invoices.filter(i => i.patientId === patient.id);
-  
-  // Get tests associated with the patient
-  const tests = labData.tests.filter(test => 
-    reports.some(report => report.testId === test.id)
-  );
-  
-  // Handle view report
-  const handleViewReport = (reportId: string) => {
-    setSelectedReportForView(reportId);
-  };
-  
-  // Handle edit report
-  const handleEditReport = (report: Report) => {
-    setSelectedReportForEdit(report);
-  };
-  
-  // Handle delete report confirmation
-  const handleDeleteConfirm = (reportId: string) => {
-    setReportToDelete(reportId);
-    setIsDeleteConfirmOpen(true);
-  };
-  
-  // Handle delete report
-  const handleDeleteReport = () => {
-    if (reportToDelete) {
-      deleteReport(reportToDelete);
-      setIsDeleteConfirmOpen(false);
-      setReportToDelete(null);
-    }
-  };
-  
-  // Handle test edit
-  const handleEditTest = (test: Test) => {
-    setSelectedTest(test);
-  };
-  
-  // Get selected report data
-  const getSelectedReportData = () => {
-    if (!selectedReportForView) return null;
-    
-    const report = reports.find(r => r.id === selectedReportForView);
-    if (!report) return null;
-    
-    const test = labData.tests.find(t => t.id === report.testId);
-    if (!test) return null;
-    
-    return { report, test };
-  };
-  
-  // Selected report data for viewing
-  const selectedReportData = getSelectedReportData();
 
   return (
     <Layout title="Patient Details">
-      {/* Patient Information Header - Using the UI from the images provided */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="flex items-start">
-            <div className="bg-blue-100 rounded-full h-16 w-16 flex items-center justify-center text-blue-600 text-2xl font-bold mr-4">
-              {patient.fullName.charAt(0)}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Patient Information Card */}
+        <Card className="futuristic-card-solid lg:col-span-1">
+          <CardHeader className="bg-gradient-to-r from-futuristic-purple/10 to-futuristic-blue/10 pb-4">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <User className="h-5 w-5 text-futuristic-purple" />
+              Patient Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-futuristic-blue to-futuristic-purple flex items-center justify-center text-white text-3xl font-semibold mb-4">
+                {patient.fullName.charAt(0)}
+              </div>
+              <h2 className="text-xl font-semibold">{patient.title} {patient.fullName}</h2>
+              <p className="text-slate-500">Patient ID: {patient.id.replace('p', '')}</p>
             </div>
-            <div className="flex flex-col md:flex-row w-full justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{patient.title} {patient.fullName}</h1>
-                <p className="text-gray-600 flex items-center mt-1">
-                  <User className="h-4 w-4 mr-1" /> {patient.age} years, {patient.sex}
-                </p>
-                <div className="mt-3 space-y-1">
-                  <p className="text-gray-600 flex items-center">
-                    <Phone className="h-4 w-4 mr-2" /> {patient.mobile}
-                  </p>
-                  {patient.email && (
-                    <p className="text-gray-600 flex items-center">
-                      <Mail className="h-4 w-4 mr-2" /> {patient.email}
-                    </p>
-                  )}
-                  {patient.address && (
-                    <p className="text-gray-600 flex items-center">
-                      <Home className="h-4 w-4 mr-2" /> {patient.address}
-                    </p>
-                  )}
+            
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <div className="mr-3 mt-1 text-futuristic-purple">
+                  <CalendarIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Registration Date</p>
+                  <p className="font-medium">{format(new Date(patient.regDate), 'PPP')}</p>
                 </div>
               </div>
-              <div className="mt-4 md:mt-0 space-y-1">
-                <p className="text-gray-600 flex items-center justify-end">
-                  <Mail className="h-4 w-4 mr-2" /> {patient.email}
-                </p>
-                <p className="text-gray-600 flex items-center justify-end">
-                  <Calendar className="h-4 w-4 mr-2" /> Registered on {format(new Date(patient.regDate), "dd MMMM yyyy")}
-                </p>
+              
+              <div className="flex items-start">
+                <div className="mr-3 mt-1 text-futuristic-purple">
+                  <User className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Age & Sex</p>
+                  <p className="font-medium">{patient.age} years, {patient.sex}</p>
+                </div>
               </div>
+              
+              <div className="flex items-start">
+                <div className="mr-3 mt-1 text-futuristic-purple">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Mobile</p>
+                  <p className="font-medium">{patient.mobile}</p>
+                </div>
+              </div>
+              
+              {patient.email && (
+                <div className="flex items-start">
+                  <div className="mr-3 mt-1 text-futuristic-purple">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Email</p>
+                    <p className="font-medium">{patient.email}</p>
+                  </div>
+                </div>
+              )}
+              
+              {patient.address && (
+                <div className="flex items-start">
+                  <div className="mr-3 mt-1 text-futuristic-purple">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Address</p>
+                    <p className="font-medium">{patient.address}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Tab Navigation - Simplified to just reports and invoices */}
-      <div className="mb-6">
-        <div className="border-b">
-          <div className="flex -mb-px">
-            <button
-              className={`mr-8 py-2 px-1 border-b-2 ${
-                activeTab === "reports" 
-                  ? "border-blue-500 text-blue-600 font-medium" 
-                  : "border-transparent hover:border-gray-300"
-              }`}
-              onClick={() => setActiveTab("reports")}
-            >
-              Reports ({reports.length})
-            </button>
-            <button
-              className={`py-2 px-1 border-b-2 ${
-                activeTab === "invoices" 
-                  ? "border-blue-500 text-blue-600 font-medium" 
-                  : "border-transparent hover:border-gray-300"
-              }`}
-              onClick={() => setActiveTab("invoices")}
-            >
-              Invoices ({invoices.length})
-            </button>
-          </div>
-        </div>
+            
+            <div className="mt-8 flex space-x-3">
+              <Button
+                variant="outline"
+                className="w-full border-futuristic-purple/30 text-futuristic-purple hover:bg-futuristic-purple/5"
+                onClick={() => navigate(`/register-patient?edit=${patient.id}`)}
+              >
+                <Pen className="h-4 w-4 mr-2" />
+                Edit Details
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Tests & Invoices Tabs */}
+        <Card className="futuristic-card-solid lg:col-span-2">
+          <Tabs defaultValue="tests" className="w-full">
+            <CardHeader className="bg-gradient-to-r from-futuristic-blue/10 to-futuristic-teal/10 pb-3">
+              <div className="flex justify-between items-center mb-2">
+                <CardTitle className="text-xl">Medical Records</CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => setAddTestDialogOpen(true)}
+                    className="bg-futuristic-purple hover:bg-futuristic-purple/90 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add Test
+                  </Button>
+                </div>
+              </div>
+              <TabsList className="grid grid-cols-2 bg-slate-100">
+                <TabsTrigger value="tests" className="data-[state=active]:bg-white data-[state=active]:text-futuristic-purple">
+                  <FileText className="h-4 w-4 mr-2" /> Tests & Reports
+                </TabsTrigger>
+                <TabsTrigger value="invoices" className="data-[state=active]:bg-white data-[state=active]:text-futuristic-purple">
+                  <Receipt className="h-4 w-4 mr-2" /> Invoices
+                </TabsTrigger>
+              </TabsList>
+            </CardHeader>
+            
+            <CardContent className="pt-4">
+              <TabsContent value="tests" className="mt-0 space-y-4">
+                {patientReports.length > 0 ? (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                    {patientReports.map(report => {
+                      const test = labData.tests.find(t => t.id === report.testId);
+                      return (
+                        <div 
+                          key={report.id} 
+                          className="border rounded-lg p-3 hover:shadow-sm transition-shadow"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium">{getTestName(report.testId)}</h3>
+                              <div className="text-sm text-slate-500 flex items-center mt-1">
+                                <Calendar className="h-3.5 w-3.5 mr-1" />
+                                {format(new Date(report.date), 'PPP')}
+                              </div>
+                            </div>
+                            <div>
+                              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                report.status === 'Completed' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {report.status === 'Completed' ? (
+                                  <div className="flex items-center">
+                                    <Check className="h-3 w-3 mr-1" />
+                                    Completed
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Pending
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 flex justify-between items-center">
+                            <div className="text-xs text-slate-500">
+                              {test && (
+                                <span className="bg-slate-100 px-2 py-1 rounded">
+                                  {test.category}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex space-x-2">
+                              {report.status === 'Pending' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                  onClick={() => markReportAsCompleted(report.id)}
+                                >
+                                  <Check className="h-3 w-3 mr-1" /> Mark Complete
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs"
+                                onClick={() => navigate(`/reports?id=${report.id}`)}
+                              >
+                                <FileSpreadsheet className="h-3 w-3 mr-1" /> View Report
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <FileText className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                    <p>No tests or reports found for this patient</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => setAddTestDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Test
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="invoices" className="mt-0 space-y-4">
+                {patientInvoices.length > 0 ? (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                    {patientInvoices.map(invoice => (
+                      <div 
+                        key={invoice.id} 
+                        className="border rounded-lg p-3 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">Invoice #{invoice.id.replace('i', '')}</h3>
+                            <div className="text-sm text-slate-500 flex items-center mt-1">
+                              <Calendar className="h-3.5 w-3.5 mr-1" />
+                              {format(new Date(invoice.date), 'PPP')}
+                            </div>
+                          </div>
+                          <div>
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              invoice.status === 'Paid' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {invoice.status}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3">
+                          <div className="text-sm">
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-500">Tests</span>
+                              <span>{invoice.tests.length}</span>
+                            </div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-500">Total Amount</span>
+                              <span>₹{invoice.totalAmount.toFixed(2)}</span>
+                            </div>
+                            {invoice.discountAmount > 0 && (
+                              <div className="flex justify-between mb-1">
+                                <span className="text-slate-500">Discount ({invoice.discountPercentage}%)</span>
+                                <span>-₹{invoice.discountAmount.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between mb-1 font-medium">
+                              <span>Net Amount</span>
+                              <span>₹{invoice.netAmount.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Payment Mode</span>
+                              <span>{invoice.paymentMode}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 flex justify-between items-center">
+                          <div className="text-xs">
+                            {invoice.balanceAmount > 0 && (
+                              <span className="text-red-500 font-medium">
+                                Balance: ₹{invoice.balanceAmount.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs"
+                            onClick={() => navigate(`/invoices?id=${invoice.id}`)}
+                          >
+                            <Receipt className="h-3 w-3 mr-1" /> View Invoice
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <Receipt className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                    <p>No invoices found for this patient</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => setAddTestDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Test & Create Invoice
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </CardContent>
+          </Tabs>
+        </Card>
       </div>
       
-      {/* Content based on active tab */}
-      {activeTab === "reports" && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Test Reports</h2>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-              <FilePlus className="h-4 w-4 mr-2" /> Add Test
-            </Button>
-          </div>
-          
-          {/* Reports List */}
-          {reports.length > 0 ? (
-            <div className="space-y-4">
-              {reports.map(report => {
-                const test = labData.tests.find(t => t.id === report.testId);
-                return (
-                  <div 
-                    key={report.id} 
-                    className="p-4 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">{test?.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {format(new Date(report.date), "d MMM yyyy")}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          report.status === "Completed" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {report.status}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewReport(report.id)}
-                        >
-                          View
-                        </Button>
-                        {report.status === "Completed" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                          >
-                            Edit Results
-                          </Button>
-                        )}
-                        {report.status === "Pending" && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditReport(report)}
-                            className="h-8 w-8 text-blue-600"
-                          >
-                            <FileEdit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteConfirm(report.id)}
-                          className="h-8 w-8 text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              No reports available for this patient.
-            </div>
-          )}
-        </div>
-      )}
-      
-      {activeTab === "invoices" && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Billing Information</h2>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-              <FilePlus className="h-4 w-4 mr-2" /> Add Invoice
-            </Button>
-          </div>
-          
-          {/* Invoices List */}
-          {invoices.length > 0 ? (
-            <div className="space-y-4">
-              {invoices.map(invoice => (
-                <div 
-                  key={invoice.id} 
-                  className="p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">Invoice #{invoice.id.replace('i', '')}</h3>
-                      <p className="text-sm text-gray-500">
-                        {format(parseISO(invoice.date), "d MMM yyyy")}
-                      </p>
-                      <p className="font-medium mt-1">₹{invoice.netAmount.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        invoice.status === "Paid" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {invoice.status}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              No invoices available for this patient.
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Report View Dialog - Removed print button */}
-      <Dialog 
-        open={selectedReportForView !== null} 
-        onOpenChange={(open) => { if (!open) setSelectedReportForView(null); }}
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Report</h2>
-          </div>
-          
-          {selectedReportData && (
-            <ReportPrintView
-              report={selectedReportData.report}
-              patient={patient}
-              test={selectedReportData.test}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Test Dialog */}
-      <EditTestDialog
-        test={selectedTest}
-        open={selectedTest !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedTest(null);
-        }}
+      {/* Add Test Dialog */}
+      <AddTestDialog
+        patientId={id || ""}
+        open={addTestDialogOpen}
+        onOpenChange={setAddTestDialogOpen}
+        onTestAdded={handleTestAdded}
       />
-      
-      {/* Report Edit Dialog */}
-      <Dialog 
-        open={selectedReportForEdit !== null}
-        onOpenChange={(open) => { if (!open) setSelectedReportForEdit(null); }}
-      >
-        <DialogContent className="max-w-lg">
-          <div className="py-4">
-            <h2 className="text-xl font-semibold mb-4">Update Report Status</h2>
-            {selectedReportForEdit && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="reportStatus">Status</Label>
-                  <Select
-                    value={selectedReportForEdit.status}
-                    onValueChange={(value) => {
-                      setSelectedReportForEdit(prev => 
-                        prev ? { ...prev, status: value as "Pending" | "Completed" } : null
-                      );
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedReportForEdit(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (selectedReportForEdit) {
-                        updateReport(selectedReportForEdit);
-                        setSelectedReportForEdit(null);
-                      }
-                    }}
-                  >
-                    Update
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the report.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteReport}
-              className="bg-red-500 text-white hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 };

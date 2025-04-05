@@ -1,22 +1,17 @@
 
-import type { Config } from "tailwindcss";
+import { type Config } from 'tailwindcss';
+import { fontFamily } from 'tailwindcss/defaultTheme';
 
 export default {
-  darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
-  prefix: "",
+  darkMode: ['class'],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     container: {
       center: true,
       padding: '2rem',
       screens: {
-        '2xl': '1400px'
-      }
+        '2xl': '1400px',
+      },
     },
     extend: {
       colors: {
@@ -27,117 +22,84 @@ export default {
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
+          foreground: 'hsl(var(--accent-foreground))',
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
+          foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
+          foreground: 'hsl(var(--card-foreground))',
         },
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))'
-        },
-        nvr: {
-          red: '#e63946',
-          blue: '#0077b6',
-          green: '#2a9d8f',
-          yellow: '#ffb703',
-        },
+        // Futuristic color palette
         futuristic: {
-          blue: '#4361EE',
-          purple: '#7209B7',
-          pink: '#F72585',
-          cyan: '#4CC9F0',
-          teal: '#06D6A0',
-          yellow: '#FFD60A',
-          orange: '#FB5607',
-          red: '#D62828',
-          dark: '#03071E',
-          light: '#E9ECEF',
-          gradient1: 'linear-gradient(90deg, #4361EE, #7209B7)',
-          gradient2: 'linear-gradient(90deg, #F72585, #4361EE)',
-          gradient3: 'linear-gradient(90deg, #06D6A0, #4CC9F0)',
+          dark: '#1A1F2C',
+          purple: '#8B5CF6',
+          blue: '#3B82F6',
+          cyan: '#06B6D4',
+          pink: '#EC4899',
+          red: '#EF4444',
+          teal: '#14B8A6',
+          yellow: '#F59E0B',
+          orange: '#F97316',
+          green: '#10B981',
+          grid: 'rgba(6, 8, 24, 0.85)',
         },
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        'glass': '0 0 20px rgba(0, 0, 0, 0.1)',
+        'neon': '0 0 20px rgba(139, 92, 246, 0.7)',
+        'glow': '0 0 10px rgba(59, 130, 246, 0.5)',
       },
       keyframes: {
+        'pulse-glow': {
+          '0%, 100%': { filter: 'drop-shadow(0 0 1px rgba(139, 92, 246, 0.4))' },
+          '50%': { filter: 'drop-shadow(0 0 4px rgba(139, 92, 246, 0.8))' },
+        },
         'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' }
+          from: { height: 0 },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
           from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' }
-        },
-        'fade-in': {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        'float': {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(74, 222, 128, 0.2)' },
-          '50%': { boxShadow: '0 0 20px rgba(74, 222, 128, 0.6)' },
-        },
-        'rotate-3d': {
-          '0%': { transform: 'rotateY(0deg)' },
-          '100%': { transform: 'rotateY(360deg)' },
+          to: { height: 0 },
         },
       },
       animation: {
+        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in': 'fade-in 0.3s ease-in-out',
-        'float': 'float 6s ease-in-out infinite',
-        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-        'rotate-3d': 'rotate-3d 10s linear infinite',
-      },
-      boxShadow: {
-        'neon': '0 0 5px theme("colors.futuristic.blue"), 0 0 20px theme("colors.futuristic.cyan")',
-        'neon-pink': '0 0 5px theme("colors.futuristic.pink"), 0 0 20px theme("colors.futuristic.purple")',
-        'neon-green': '0 0 5px theme("colors.futuristic.teal"), 0 0 20px theme("colors.futuristic.cyan")',
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
       },
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'futuristic-grid': 'linear-gradient(rgba(25, 25, 25, 0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 25, 25, 0.9) 1px, transparent 1px)',
+        'futuristic-grid': 'linear-gradient(to right, var(--tw-gradient-stops)), linear-gradient(to bottom, var(--tw-gradient-stops))',
+        'futuristic-glow': 'radial-gradient(circle at center, rgba(139, 92, 246, 0.5) 0%, transparent 70%)',
       },
-      backdropFilter: {
-        'glass': 'blur(4px) saturate(180%)',
+      fontFamily: {
+        sans: ["Inter", ...fontFamily.sans],
       },
-    }
+    },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require('tailwindcss-animate')],
 } satisfies Config;

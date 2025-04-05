@@ -3,22 +3,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Microscope, Sparkles, Lock, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setIsLoading(true);
     
     try {
       const success = await login(email, password);
@@ -26,76 +31,118 @@ const Login = () => {
         navigate("/dashboard");
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <img
-              src="/lovable-uploads/0c90d00f-da07-4ebc-8043-1ffd9408de83.png"
-              alt="NVR Diagnostics Logo"
-              className="h-24 w-auto"
-            />
-          </div>
-          <CardTitle className="text-3xl font-bold text-red-600">DIAGNOSTICS</CardTitle>
-          <CardDescription>Sign in to access your dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-cream-50 border-cream-100"
-              />
+    <div className="flex min-h-screen w-full flex-col">
+      {/* Background with futuristic grid pattern */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-futuristic-blue/20 to-slate-900">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,8,24,0.85)_0.2px,transparent_0.2px),linear-gradient(90deg,rgba(6,8,24,0.85)_0.2px,transparent_0.2px)] bg-[size:40px_40px]"></div>
+        <div className="absolute inset-0 opacity-30">
+          <div className="h-full w-full bg-[radial-gradient(circle_at_50%_120%,#3e64ff,transparent_65%)]"></div>
+          <div className="absolute inset-0 h-full w-full bg-[radial-gradient(circle_at_80%_20%,#7d44ff,transparent_55%)]"></div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col justify-center items-center px-6 relative z-10">
+        <div className="mx-auto w-full max-w-md">
+          <div className="flex flex-col items-center space-y-2 mb-8">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-futuristic-blue to-futuristic-purple flex items-center justify-center shadow-lg shadow-futuristic-blue/20">
+              <Microscope className="h-12 w-12 text-white" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-cream-50 border-cream-100 pr-10"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  onClick={() => setShowPassword(!showPassword)}
+            <h1 className="text-3xl font-bold tracking-tight text-white">NVR Diagnostics</h1>
+            <p className="text-sm text-slate-300 flex items-center">
+              Powered by <Sparkles className="h-3.5 w-3.5 mx-1 text-futuristic-yellow" /> Advanced Diagnostics
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl">
+            <div className="p-8">
+              <div className="flex justify-center mb-6">
+                <div className="rounded-full bg-slate-800/50 p-2.5">
+                  <Lock className="h-5 w-5 text-futuristic-purple" />
+                </div>
+              </div>
+              
+              <h2 className="mb-6 text-center text-xl font-semibold text-white">
+                Log In to NVR Diagnostics
+              </h2>
+              
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Mail className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="admin@nvr.com"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-slate-800/50 border-slate-700 text-white pl-10 w-full focus:ring-futuristic-purple focus:border-futuristic-purple"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-sm font-medium text-slate-300">
+                      Password
+                    </Label>
+                    <button type="button" className="text-xs text-futuristic-purple hover:text-futuristic-blue">
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Lock className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-slate-800/50 border-slate-700 text-white pl-10 w-full focus:ring-futuristic-purple focus:border-futuristic-purple"
+                    />
+                  </div>
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full rounded-lg bg-gradient-to-r from-futuristic-blue to-futuristic-purple hover:from-futuristic-purple hover:to-futuristic-blue text-white font-medium py-2.5 shadow-md shadow-futuristic-purple/20 transition-all duration-300 transform hover:translate-y-[-2px]"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></div>
+                      Logging in...
+                    </div>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    "Sign In"
                   )}
-                </button>
+                </Button>
+              </form>
+              
+              <div className="mt-6 text-center text-xs text-slate-400">
+                <p>Default Login: admin@nvr.com / password</p>
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold"
-              disabled={loading}
-            >
-              {loading ? "Signing In..." : "Sign In"}
-            </Button>
-            <div className="text-center text-sm text-gray-500 mt-4">
-              <p>For demo: admin@nvr.com / password</p>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          
+          <div className="mt-5 text-center text-xs text-slate-400">
+            © 2025 NVR Diagnostics. All rights reserved.
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
