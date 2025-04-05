@@ -3,7 +3,8 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag, Flask } from "lucide-react";
+// import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
