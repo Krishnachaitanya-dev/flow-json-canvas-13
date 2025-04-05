@@ -650,7 +650,7 @@ const CompactRegisterPatient = () => {
                 </div>
               </div>
               
-{/*               <div className="mt-4 space-y-1">
+              <div className="mt-4 space-y-1">
                 <Label htmlFor="remarks" className="text-sm">Remarks</Label>
                 <Textarea
                   id="remarks"
@@ -660,7 +660,7 @@ const CompactRegisterPatient = () => {
                   onChange={handlePaymentChange}
                   className="bg-yellow-50 border-gray-200"
                   rows={2}
-                /> */}
+                />
               </div>
             </div>
             
