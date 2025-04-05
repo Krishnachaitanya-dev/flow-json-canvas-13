@@ -20,7 +20,7 @@ const Invoices = () => {
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("");
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
@@ -37,7 +37,7 @@ const Invoices = () => {
       return patientName.includes(searchQuery.toLowerCase()) || 
              invoiceId.includes(searchQuery.toLowerCase());
     })
-    .filter(invoice => statusFilter ? invoice.status === statusFilter : true)
+    .filter(invoice => statusFilter === "all" ? true : invoice.status === statusFilter)
     .filter(invoice => dateFilter ? invoice.date === dateFilter : true)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
@@ -111,7 +111,7 @@ const Invoices = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Paid">Paid</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
                 </SelectContent>
