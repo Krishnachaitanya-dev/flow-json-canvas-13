@@ -82,13 +82,13 @@
 
 /* Print Styles - Completely refactored for reliability */
 @media print {
-  /* Basic page setup */
+  /* Existing print styles */
   @page {
     size: portrait;
     margin: 10mm;
+    margin-top: 5mm; /* Slightly reduced top margin to minimize unnecessary space */
   }
   
-  /* Reset basic elements */
   html, body {
     height: 100% !important;
     width: 100% !important;
@@ -120,6 +120,7 @@
     background-color: white !important;
     color: black !important;
     z-index: 9999 !important;
+    page-break-inside: avoid !important; /* Prevent page breaks within the container */
   }
   
   /* Show all elements within print containers */
@@ -129,6 +130,13 @@
     display: revert !important;
     overflow: visible !important;
     color: inherit !important;
+    page-break-inside: avoid !important; /* Prevent page breaks within elements */
+  }
+  
+  /* Ensure no extra blank pages */
+  @page {
+    size: auto;
+    margin: 5mm;
   }
   
   /* Hide UI elements that shouldn't appear in print */
