@@ -235,7 +235,7 @@ const CompactRegisterPatient = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Patient Information Section */}
             <div>
-              <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Patient Information</h2>
+{/*               <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Patient Information</h2> */}
               
               <div className="grid grid-cols-4 gap-4">
                 {/* Row 1 */}
