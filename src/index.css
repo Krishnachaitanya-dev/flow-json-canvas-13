@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,22 +86,22 @@
   /* Reset all page margins and ensure content fills the page */
   @page {
     size: portrait;
-    margin: 8mm;
+    margin: 10mm;
   }
   
   html, body {
-    height: 100%;
-    width: 100%;
+    height: 100% !important;
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
     background-color: #fff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    font-size: 11pt !important;
+    font-size: 10pt !important;
   }
   
-  /* Hide everything by default */
+  /* Hide everything by default except print content */
   body * {
     visibility: hidden;
     display: none;
@@ -112,12 +113,10 @@
   .print-page-content,
   .print-page-content * {
     visibility: visible !important;
-    overflow: visible !important;
     display: block;
   }
   
-  /* Make sure images are visible */
-  img,
+  /* Image handling specifically for print */
   .print-header img,
   .print-container img,
   .print-page-content img {
@@ -128,23 +127,28 @@
     max-width: 100%;
   }
   
-  /* Hide print-specific UI elements */
+  /* Hide elements that shouldn't be printed */
   .print-hidden {
     display: none !important;
+    visibility: hidden !important;
   }
   
-  /* Critical: Position the print container at the top of the page */
+  /* Position the print content for proper layout */
   .print-container,
   .print-page-content {
     position: absolute !important;
-    left: 0 !important;
     top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
-    margin: 0 !important;
-    background-color: white !important;
-    page-break-after: always;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 5mm !important;
     page-break-inside: avoid;
+    page-break-after: always;
+    background-color: white !important;
     display: block !important;
+    overflow: visible !important;
   }
   
   /* Reset dialog styling for print */
@@ -171,12 +175,14 @@
     display: none !important;
   }
   
-  /* Fix table styling for print */
+  /* Table styles for print */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
     page-break-inside: avoid !important;
     display: table !important;
+    margin-bottom: 0.5cm !important;
+    font-size: 9pt !important;
   }
   
   thead {
@@ -195,18 +201,18 @@
   th, td {
     display: table-cell !important;
     border: 1px solid #ddd !important;
-    padding: 2px 4px !important;
-    font-size: 10pt !important;
+    padding: 1mm 2mm !important;
+    font-size: 9pt !important;
   }
   
-  /* Fix gradient display in print */
+  /* Color gradient for print */
   .bg-gradient-to-r {
     background: linear-gradient(to right, #ea384c, #1EAEDB, #0FA0CE) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* Make sure colors print */
+  /* Text colors for print */
   .text-red-500 {
     color: #ef4444 !important;
     -webkit-print-color-adjust: exact !important;
@@ -219,9 +225,13 @@
     print-color-adjust: exact !important;
   }
   
-  /* Fix flex display for print */
+  /* Layout fixes for print */
   .print-header {
     display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 0.5cm !important;
   }
   
   .flex {

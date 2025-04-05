@@ -9,6 +9,52 @@ interface ReportPrintViewProps {
   test: Test;
 }
 
+// Separate header component for better print control
+const ReportHeader = () => {
+  return (
+    <>
+      <div className="print-header flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <div className="h-14 w-14 bg-blue-500 rounded-full flex items-center justify-center">
+            <Microscope className="h-8 w-8 text-white" />
+          </div>
+        </div>
+        <div className="text-center flex-1">
+          <h1 className="text-2xl font-bold">Lab Report</h1>
+        </div>
+        <div className="w-[100px] h-[48px] flex items-center justify-end">
+          <img 
+            src="/lovable-uploads/852c0452-f823-44bb-a2b4-9cccd3034379.png" 
+            alt="NVR Diagnostics" 
+            className="h-10 print-visible"
+            style={{ 
+              printColorAdjust: 'exact',
+              WebkitPrintColorAdjust: 'exact'
+            }}
+          />
+        </div>
+      </div>
+      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-4"></div>
+    </>
+  );
+};
+
+// Separate footer component for better print control
+const ReportFooter = ({ dateString, timeString }: { dateString: string, timeString: string }) => {
+  return (
+    <>
+      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-3"></div>
+      <div className="text-center mb-3 text-sm">
+        <div className="font-bold text-blue-600 text-lg">NVR DIAGNOSTICS</div>
+        <div className="text-xs text-gray-600">Santharam Hospital, Dowlaiswaram, Rajamahendravaram - 7780377630</div>
+      </div>
+      <div className="flex justify-end text-xs text-gray-500">
+        <div>Printed on: {dateString} {timeString}</div>
+      </div>
+    </>
+  );
+};
+
 const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   // Get current date and time for the printed timestamp
   const now = new Date();
@@ -35,32 +81,9 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="print-page-content max-w-4xl mx-auto bg-white p-4">
-      {/* Logo and title section */}
-      <div className="print-header flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <div className="h-14 w-14 bg-blue-500 rounded-full flex items-center justify-center">
-            <Microscope className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="text-center flex-1">
-          <h1 className="text-2xl font-bold">Lab Report</h1>
-        </div>
-        <div className="w-[100px] h-[48px] flex items-center justify-end">
-          <img 
-            src="/lovable-uploads/852c0452-f823-44bb-a2b4-9cccd3034379.png" 
-            alt="NVR Diagnostics" 
-            className="h-10 print-visible"
-            style={{ 
-              printColorAdjust: 'exact',
-              WebkitPrintColorAdjust: 'exact'
-            }}
-          />
-        </div>
-      </div>
-      
-      {/* Colored bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-4"></div>
+    <div className="print-page-content bg-white">
+      {/* Header section with logo and title */}
+      <ReportHeader />
       
       {/* Patient Information - Compact layout */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-sm">
@@ -128,19 +151,8 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         </tbody>
       </table>
       
-      {/* Bottom Colored bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-3"></div>
-      
-      {/* Footer - Compact footer */}
-      <div className="text-center mb-3 text-sm">
-        <div className="font-bold text-blue-600 text-lg">NVR DIAGNOSTICS</div>
-        <div className="text-xs text-gray-600">Santharam Hospital, Dowlaiswaram, Rajamahendravaram - 7780377630</div>
-      </div>
-      
-      {/* Printed timestamp - right aligned */}
-      <div className="flex justify-end text-xs text-gray-500">
-        <div>Printed on: {dateString} {timeString}</div>
-      </div>
+      {/* Footer with colored bar and timestamp */}
+      <ReportFooter dateString={dateString} timeString={timeString} />
     </div>
   );
 };
