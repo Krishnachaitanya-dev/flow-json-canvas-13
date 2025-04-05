@@ -100,13 +100,12 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         <Label htmlFor="header-footer-toggle">Show header/footer</Label>
       </div>
     
-      {/* Reduced top margin by 50% with mt-5 instead of mt-10 when no header */}
-      <div className={`print-page-content p-6 ${!showHeaderFooter ? 'pt-8' : ''}`}>
+      <div className="print-page-content p-6">
         {/* Header section with logo and title - only shown if toggle is on */}
         {showHeaderFooter && <ReportHeader />}
         
         {/* Patient Information - Updated to have labels next to values in single row */}
-        <div className={`grid grid-cols-2 gap-x-4 gap-y-2 mb-6 ${!showHeaderFooter ? 'mt-5' : ''}`}>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6">
           <div className="flex">
             <span className="font-semibold w-28">Patient Name:</span>
             <span>{patient.fullName}</span>

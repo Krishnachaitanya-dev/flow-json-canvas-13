@@ -18,8 +18,8 @@ interface Parameter {
 
 // Define an extended test type for internal use that includes our Parameter array
 interface ExtendedTest extends Omit<Test, 'parameters'> {
-  parameters: Parameter[];
   parameterCount: number; // Store the original numeric parameter count here
+  parameters: Parameter[]; // This is our array of parameter objects for UI
 }
 
 interface EditTestDialogProps {
@@ -36,10 +36,10 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     id: "",
     name: "",
     category: "",
-    parameterCount: 0, // Initialize the parameter count
+    parameterCount: 0,
+    parameters: [],
     price: 0,
     code: "",
-    parameters: [], // Initialize the parameters array
   });
   
   const [newParameter, setNewParameter] = useState<Parameter>({
@@ -146,7 +146,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
   const handleSubmit = () => {
     if (!testData.name || !testData.category || testData.price <= 0) return;
     
-    // Update the test with the new data
+    // Update the test with the new data, converting our ExtendedTest to Test format
     updateTest({
       id: testData.id,
       name: testData.name,
