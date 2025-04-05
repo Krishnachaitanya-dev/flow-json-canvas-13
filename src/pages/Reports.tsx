@@ -442,7 +442,7 @@ const Reports = () => {
           if (!open) setIsPrintView(false);
         }}
       >
-        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white print:max-h-none print-dialog">
+        <DialogContent className="max-w-4xl">
           <DialogHeader className="print-hidden">
             <DialogTitle>Lab Report</DialogTitle>
             <DialogDescription>Preview the report before printing.</DialogDescription>
@@ -451,7 +451,7 @@ const Reports = () => {
           {currentReport && (
             <div className="print-container">
               <div className="print-only-warning bg-yellow-100 p-4 mb-4 rounded border border-yellow-400 print-hidden">
-                <p className="font-semibold">Important: Do not duplicate any section. Merge all data into a single, error-free report.</p>
+                <p className="font-semibold">Preview before printing</p>
               </div>
               
               <ReportPrintView

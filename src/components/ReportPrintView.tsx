@@ -26,7 +26,7 @@ const ReportHeader = () => {
           <img 
             src="/lovable-uploads/852c0452-f823-44bb-a2b4-9cccd3034379.png" 
             alt="NVR Diagnostics" 
-            className="h-10 print-visible"
+            className="h-10"
             style={{ 
               printColorAdjust: 'exact',
               WebkitPrintColorAdjust: 'exact'
@@ -81,7 +81,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="print-page-content bg-white">
+    <div className="print-page-content p-6">
       {/* Header section with logo and title */}
       <ReportHeader />
       

@@ -24,13 +24,11 @@ export const PrintButton = ({
   useEffect(() => {
     const beforePrint = () => {
       setIsPrinting(true);
-      // Add a class to body for print-specific styles
       document.body.classList.add('is-printing');
     };
     
     const afterPrint = () => {
       setIsPrinting(false);
-      // Clean up any print-specific classes
       document.body.classList.remove('is-printing');
     };
 
@@ -49,84 +47,10 @@ export const PrintButton = ({
       onClick();
     }
     
-    // Add a small delay to allow any UI updates to complete
+    // Trigger the print dialog after a small delay to ensure content is ready
     setTimeout(() => {
-      // Add print-specific class to body
-      document.body.classList.add('is-printing');
-      
-      // Set print-specific styles for single page printing with improved scaling
-      const style = document.createElement('style');
-      style.id = 'print-style';
-      style.innerHTML = `
-        @media print {
-          @page {
-            size: portrait;
-            margin: 10mm;
-          }
-          html, body {
-            height: 100% !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: visible !important;
-            font-size: 10pt !important;
-          }
-          
-          .print-page-content {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            margin: 0 auto !important;
-            padding: 5mm !important;
-            page-break-inside: avoid !important;
-            overflow: visible !important;
-          }
-          
-          table { 
-            font-size: 9pt !important;
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-bottom: 0.5cm !important;
-          }
-          
-          th, td {
-            padding: 1mm 2mm !important;
-          }
-          
-          .print-header {
-            display: flex !important;
-            visibility: visible !important;
-            margin-bottom: 0.5cm !important;
-          }
-          
-          img {
-            display: block !important;
-            visibility: visible !important;
-            print-color-adjust: exact !important;
-            -webkit-print-color-adjust: exact !important;
-          }
-          
-          .print-hidden {
-            display: none !important;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-      
       window.print();
-      
-      // Clean up print styles
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-      }, 500);
-    }, 300);
+    }, 100);
   };
 
   return (
