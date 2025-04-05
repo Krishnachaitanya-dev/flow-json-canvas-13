@@ -9,10 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
 
+// Define the Parameter interface for our internal use
 interface Parameter {
   parameter: string;
   unit: string;
   referenceRange: string;
+}
+
+// Define an extended test type for internal use that includes our Parameter array
+interface ExtendedTest extends Omit<Test, 'parameters'> {
+  parameters: Parameter[];
+  parameterCount: number; // Store the original numeric parameter count here
 }
 
 interface EditTestDialogProps {
@@ -25,17 +32,17 @@ interface EditTestDialogProps {
 const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogProps) => {
   const { updateTest } = useLab();
   
-  const [testData, setTestData] = useState<Test & { parameters: Parameter[] }>({
+  const [testData, setTestData] = useState<ExtendedTest>({
     id: "",
     name: "",
     category: "",
-    parameters: 0,
+    parameterCount: 0, // Initialize the parameter count
     price: 0,
     code: "",
-    parameters: []
+    parameters: [], // Initialize the parameters array
   });
   
-  const [newParameter, setNewParameter] = useState({
+  const [newParameter, setNewParameter] = useState<Parameter>({
     parameter: "",
     unit: "",
     referenceRange: ""
@@ -66,7 +73,8 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
       
       setTestData({
         ...test,
-        parameters: initialParameters
+        parameterCount: test.parameters, // Store the original numeric parameter count
+        parameters: initialParameters, // Use our array of Parameter objects
       });
     }
   }, [test]);
@@ -75,7 +83,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     const { name, value } = e.target;
     setTestData(prev => ({
       ...prev,
-      [name]: name === "price" || name === "parameters" ? parseFloat(value) : value
+      [name]: name === "price" ? parseFloat(value) : value
     }));
   };
   
@@ -115,7 +123,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     setTestData(prev => ({
       ...prev,
       parameters: [...prev.parameters, { ...newParameter }],
-      parameters: prev.parameters + 1 // Increment parameter count
+      parameterCount: prev.parameterCount + 1 // Increment parameter count
     }));
     
     // Reset new parameter form
@@ -131,7 +139,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     setTestData(prev => ({
       ...prev,
       parameters: prev.parameters.filter((_, i) => i !== index),
-      parameters: prev.parameters - 1 // Decrement parameter count
+      parameterCount: prev.parameterCount - 1 // Decrement parameter count
     }));
   };
   
@@ -143,9 +151,11 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
       id: testData.id,
       name: testData.name,
       category: testData.category,
-      parameters: testData.parameters.length,
+      parameters: testData.parameterCount, // Use the numeric parameter count for the API
       price: testData.price,
-      code: testData.code
+      code: testData.code,
+      description: testData.description,
+      instructions: testData.instructions
     });
     
     // Call the onUpdate callback if provided
