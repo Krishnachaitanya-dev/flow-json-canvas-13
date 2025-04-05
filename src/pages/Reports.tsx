@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
@@ -35,25 +34,21 @@ const Reports = () => {
   const [isEditingReport, setIsEditingReport] = useState(false);
   const [isPrintView, setIsPrintView] = useState(false);
   
-  // Date filter states
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>(undefined);
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>(undefined);
   const [dateFilterType, setDateFilterType] = useState<"none" | "single" | "range">("none");
   
-  // Filter reports based on search query and date filters
   const filteredReports = labData.reports.filter(report => {
     const query = searchQuery.toLowerCase();
     const patient = labData.patients.find(p => p.id === report.patientId);
     const test = labData.tests.find(t => t.id === report.testId);
     const reportDate = parseISO(report.date);
     
-    // Text search filter
     const matchesText = 
       patient?.fullName.toLowerCase().includes(query) ||
       test?.name.toLowerCase().includes(query);
     
-    // Date filter logic
     let matchesDate = true;
     if (dateFilterType === "single" && filterDate) {
       matchesDate = isSameDay(reportDate, filterDate);
@@ -67,14 +62,11 @@ const Reports = () => {
     return matchesText && matchesDate;
   });
 
-  // Handle report edit
   const handleEditReport = (report: any) => {
     const test = labData.tests.find(t => t.id === report.testId);
     
-    // Create default results if they don't exist
     let initialResults = report.results || [];
     if (initialResults.length === 0 && test) {
-      // Create empty results based on number of parameters
       for (let i = 0; i < test.parameters; i++) {
         initialResults.push({
           parameter: `Parameter ${i+1}`,
@@ -90,8 +82,7 @@ const Reports = () => {
     setIsEditingReport(true);
     setIsPrintView(false);
   };
-  
-  // Handle saving report results
+
   const handleSaveReport = () => {
     if (currentReport) {
       const updatedReport = {
@@ -106,21 +97,21 @@ const Reports = () => {
       toast.success("Report updated successfully");
     }
   };
-  
-  // Handle changes to report result values
+
   const handleResultChange = (index: number, field: string, value: string) => {
     const updatedResults = [...reportResults];
     updatedResults[index] = { ...updatedResults[index], [field]: value };
     setReportResults(updatedResults);
   };
 
-  // Handle print view
   const handlePrintView = (report: any) => {
-    setCurrentReport(report);
-    setIsPrintView(true);
+    setIsEditingReport(false);
+    setTimeout(() => {
+      setCurrentReport(report);
+      setIsPrintView(true);
+    }, 100);
   };
 
-  // Reset date filters
   const clearDateFilters = () => {
     setDateFilterType("none");
     setFilterDate(undefined);
@@ -142,7 +133,6 @@ const Reports = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Single date filter */}
           <Popover>
             <PopoverTrigger asChild>
               <Button 
@@ -177,7 +167,6 @@ const Reports = () => {
             </PopoverContent>
           </Popover>
 
-          {/* Date range filter */}
           <Popover>
             <PopoverTrigger asChild>
               <Button 
@@ -261,7 +250,6 @@ const Reports = () => {
             </PopoverContent>
           </Popover>
 
-          {/* Clear filters button */}
           {dateFilterType !== "none" && (
             <Button variant="ghost" size="sm" onClick={clearDateFilters}>
               Clear filters
@@ -351,7 +339,6 @@ const Reports = () => {
         )}
       </div>
 
-      {/* Report Edit Dialog */}
       <Dialog open={isEditingReport} onOpenChange={setIsEditingReport}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -449,10 +436,14 @@ const Reports = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Report Print View Dialog */}
-      <Dialog open={isPrintView} onOpenChange={setIsPrintView}>
-        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white">
-          <DialogHeader className="print:hidden">
+      <Dialog 
+        open={isPrintView} 
+        onOpenChange={(open) => {
+          if (!open) setIsPrintView(false);
+        }}
+      >
+        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white print:max-h-none">
+          <DialogHeader className="print-hidden">
             <DialogTitle>Lab Report</DialogTitle>
             <DialogDescription>Preview the report before printing.</DialogDescription>
           </DialogHeader>
@@ -465,7 +456,7 @@ const Reports = () => {
                 test={labData.tests.find(t => t.id === currentReport.testId)!}
               />
               
-              <div className="flex justify-end mt-4 print:hidden">
+              <div className="flex justify-end mt-4 print-hidden">
                 <PrintButton />
               </div>
             </div>

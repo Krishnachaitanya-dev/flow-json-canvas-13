@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface PrintButtonProps {
   onClick?: () => void;
@@ -17,11 +18,34 @@ export const PrintButton = ({
   title = "Print",
   className = "print-hidden"
 }: PrintButtonProps) => {
+  const [isPrinting, setIsPrinting] = useState(false);
+  
+  // Handle beforeprint and afterprint events
+  useEffect(() => {
+    const beforePrint = () => setIsPrinting(true);
+    const afterPrint = () => {
+      setIsPrinting(false);
+      // Clean up any print-specific classes
+      document.body.classList.remove('is-printing');
+    };
+
+    window.addEventListener('beforeprint', beforePrint);
+    window.addEventListener('afterprint', afterPrint);
+    
+    return () => {
+      window.removeEventListener('beforeprint', beforePrint);
+      window.removeEventListener('afterprint', afterPrint);
+    };
+  }, []);
+
   const handlePrint = () => {
     // Execute the onClick handler if provided
     if (onClick) {
       onClick();
     }
+    
+    // Add print-specific class to body
+    document.body.classList.add('is-printing');
     
     // Add a small delay to allow any UI updates to complete
     setTimeout(() => {
@@ -36,6 +60,7 @@ export const PrintButton = ({
       onClick={handlePrint}
       className={className}
       title={title}
+      disabled={isPrinting}
     >
       <Printer className="h-4 w-4" />
       {size !== "icon" && <span className="ml-2">Print</span>}

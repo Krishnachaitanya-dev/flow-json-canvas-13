@@ -38,9 +38,9 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="p-8 max-w-4xl mx-auto bg-white print:p-2">
+    <div className="print-page p-8 max-w-4xl mx-auto bg-white print:p-2">
       {/* Logo and title section */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="print-header flex justify-between items-center mb-6">
         <div className="flex items-center">
           <div className="h-16 w-16 bg-blue-500 rounded-full flex items-center justify-center">
             <Microscope className="h-10 w-10 text-white" />

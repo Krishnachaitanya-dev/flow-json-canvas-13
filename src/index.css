@@ -101,12 +101,19 @@
     left: 0;
     top: 0;
     width: 100%;
-    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Only show the first instance of print-container to avoid duplication */
+  .print-container ~ .print-container {
+    display: none !important;
   }
   
   @page {
     size: portrait;
     margin: 10mm;
+    padding: 0;
   }
 }
 
@@ -114,63 +121,68 @@
 @media print {
   html, body {
     height: 100%;
-    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible;
     background-color: #fff !important;
-    margin: 0;
-    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-
-  dialog {
+  
+  /* Fix dialog and its content for printing */
+  dialog, 
+  [data-radix-dialog-content] {
     all: unset;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
     background: white !important;
     border: none !important;
     box-shadow: none !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    overflow: visible;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  .print-page {
+    page-break-after: always;
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
   }
   
-  dialog > * {
-    visibility: visible;
-  }
-
-  dialog .print-container {
-    position: absolute;
+  .print-header {
+    display: flex;
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
   }
   
+  /* Hide all dialog-related elements except print content */
+  [data-radix-dialog-overlay],
   .print-hidden {
     display: none !important;
   }
   
-  /* Hide dialog overlay */
-  div[data-state="open"][data-radix-dialog-overlay],
-  div[data-state="open"][data-radix-dialog-content] {
-    position: absolute !important;
-    background: white !important;
-    box-shadow: none !important;
-    border: none !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
-  /* Hide dialog background */
+  /* Reset transform for popper content */
   [data-radix-popper-content-wrapper] {
     transform: none !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   /* Ensure tables display properly in print */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
+    page-break-inside: avoid !important;
   }
   
   th, td {
