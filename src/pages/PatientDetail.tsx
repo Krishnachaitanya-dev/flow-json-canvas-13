@@ -3,14 +3,10 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
 import {
@@ -27,9 +23,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, Mail, Phone, Home, FilePlus, FileEdit, Printer, User } from "lucide-react";
+import { Edit, Trash2, Mail, Phone, Home, FilePlus, FileEdit, User, Calendar } from "lucide-react";
 import ReportPrintView from "@/components/ReportPrintView";
-import PrintButton from "@/components/PrintButton";
 import { Test, Report } from "@/context/LabContext";
 import EditTestDialog from "@/components/EditTestDialog";
 
@@ -37,7 +32,7 @@ const PatientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { labData, updateReport, deleteReport } = useLab();
   
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState<"reports" | "invoices">("reports");
   const [selectedReportForView, setSelectedReportForView] = useState<string | null>(null);
   const [selectedReportForEdit, setSelectedReportForEdit] = useState<Report | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -121,346 +116,218 @@ const PatientDetail = () => {
 
   return (
     <Layout title="Patient Details">
-      {/* Patient Information Header */}
+      {/* Patient Information Header - Using the UI from the images provided */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start justify-between">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-2xl font-bold mb-1">{patient.title} {patient.fullName}</h1>
-              <div className="flex items-center text-muted-foreground gap-6">
-                <span className="flex items-center">
-                  <User className="h-4 w-4 mr-1" /> {patient.age} years, {patient.sex}
-                </span>
-                <span className="flex items-center">
-                  <Phone className="h-4 w-4 mr-1" /> {patient.mobile}
-                </span>
-              </div>
-              {patient.email && (
-                <div className="mt-2 flex items-center text-muted-foreground">
-                  <Mail className="h-4 w-4 mr-1" /> {patient.email}
-                </div>
-              )}
-              {patient.address && (
-                <div className="mt-2 flex items-center text-muted-foreground">
-                  <Home className="h-4 w-4 mr-1" /> {patient.address}
-                </div>
-              )}
+          <div className="flex items-start">
+            <div className="bg-blue-100 rounded-full h-16 w-16 flex items-center justify-center text-blue-600 text-2xl font-bold mr-4">
+              {patient.fullName.charAt(0)}
             </div>
-            <div className="flex flex-col space-y-2">
-              <div className="text-sm text-right">
-                <span className="text-muted-foreground">Patient ID: </span>
-                <span className="font-medium">{patient.id.replace('p', '')}</span>
+            <div className="flex flex-col md:flex-row w-full justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{patient.title} {patient.fullName}</h1>
+                <p className="text-gray-600 flex items-center mt-1">
+                  <User className="h-4 w-4 mr-1" /> {patient.age} years, {patient.sex}
+                </p>
+                <div className="mt-3 space-y-1">
+                  <p className="text-gray-600 flex items-center">
+                    <Phone className="h-4 w-4 mr-2" /> {patient.mobile}
+                  </p>
+                  {patient.email && (
+                    <p className="text-gray-600 flex items-center">
+                      <Mail className="h-4 w-4 mr-2" /> {patient.email}
+                    </p>
+                  )}
+                  {patient.address && (
+                    <p className="text-gray-600 flex items-center">
+                      <Home className="h-4 w-4 mr-2" /> {patient.address}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="text-sm text-right">
-                <span className="text-muted-foreground">Registration Date: </span>
-                <span className="font-medium">{format(new Date(patient.regDate), "dd MMM yyyy")}</span>
+              <div className="mt-4 md:mt-0 space-y-1">
+                <p className="text-gray-600 flex items-center justify-end">
+                  <Mail className="h-4 w-4 mr-2" /> {patient.email}
+                </p>
+                <p className="text-gray-600 flex items-center justify-end">
+                  <Calendar className="h-4 w-4 mr-2" /> Registered on {format(new Date(patient.regDate), "dd MMMM yyyy")}
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      {/* Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="reports">Reports ({reports.length})</TabsTrigger>
-          <TabsTrigger value="tests">Tests ({tests.length})</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices ({invoices.length})</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Recent Reports</CardTitle>
-                <CardDescription>Most recent test reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {reports.length > 0 ? (
-                  <div className="space-y-4">
-                    {reports.slice(0, 3).map(report => {
-                      const test = labData.tests.find(t => t.id === report.testId);
-                      return (
-                        <div key={report.id} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{test?.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(report.date), "dd MMM yyyy")}
-                            </p>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              report.status === "Completed" 
-                                ? "bg-green-100 text-green-800" 
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {report.status}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewReport(report.id)}
-                            >
-                              View
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {reports.length > 3 && (
-                      <Button 
-                        variant="link" 
-                        onClick={() => setActiveTab("reports")}
-                        className="mt-2 p-0 h-auto"
-                      >
-                        View all reports
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No reports available</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Recent Invoices</CardTitle>
-                <CardDescription>Most recent payment details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {invoices.length > 0 ? (
-                  <div className="space-y-4">
-                    {invoices.slice(0, 3).map(invoice => (
-                      <div key={invoice.id} className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">Invoice #{invoice.id.replace('i', '')}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(invoice.date), "dd MMM yyyy")}
-                          </p>
-                        </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              invoice.status === "Paid" 
-                                ? "bg-green-100 text-green-800" 
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {invoice.status}
-                            </span>
-                            <p className="font-medium">₹{invoice.netAmount.toFixed(2)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {invoices.length > 3 && (
-                      <Button 
-                        variant="link" 
-                        onClick={() => setActiveTab("invoices")}
-                        className="mt-2 p-0 h-auto"
-                      >
-                        View all invoices
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No invoices available</p>
-                )}
-              </CardContent>
-            </Card>
+      {/* Tab Navigation - Simplified to just reports and invoices */}
+      <div className="mb-6">
+        <div className="border-b">
+          <div className="flex -mb-px">
+            <button
+              className={`mr-8 py-2 px-1 border-b-2 ${
+                activeTab === "reports" 
+                  ? "border-blue-500 text-blue-600 font-medium" 
+                  : "border-transparent hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("reports")}
+            >
+              Reports ({reports.length})
+            </button>
+            <button
+              className={`py-2 px-1 border-b-2 ${
+                activeTab === "invoices" 
+                  ? "border-blue-500 text-blue-600 font-medium" 
+                  : "border-transparent hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("invoices")}
+            >
+              Invoices ({invoices.length})
+            </button>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="reports">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Test Reports</h2>
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium">
-                <FilePlus className="h-4 w-4 mr-2" /> Add New Report
-              </Button>
-            </div>
-            
-            <div>
-              {reports.length > 0 ? (
-                reports.map(report => {
-                  const test = labData.tests.find(t => t.id === report.testId);
-                  return (
-                    <div 
-                      key={report.id} 
-                      className="p-4 border rounded-lg mb-4 hover:border-primary transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{test?.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {format(new Date(report.date), "dd MMM yyyy")}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            report.status === "Completed" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}>
-                            {report.status}
-                          </span>
-                          <div className="flex space-x-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewReport(report.id)}
-                            >
-                              View
-                            </Button>
-                            {report.status === "Pending" && (
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleEditReport(report)}
-                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <FileEdit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteConfirm(report.id)}
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No reports available for this patient.
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="tests">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Tests</h2>
-            {tests.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tests.map(test => (
-                  <Card key={test.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg">{test.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{test.category}</p>
-                            <p className="text-sm mt-2">
-                              <span className="font-medium">Code:</span> {test.code}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium">Parameters:</span> {test.parameters}
-                            </p>
-                            <p className="text-md font-medium mt-2">₹{test.price.toFixed(2)}</p>
-                          </div>
-                          
-                          <div className="flex space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditTest(test)}
-                              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                No tests associated with this patient.
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="invoices">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Invoices</h2>
-            {invoices.length > 0 ? (
-              <div className="space-y-4">
-                {invoices.map(invoice => (
-                  <div 
-                    key={invoice.id} 
-                    className="p-4 border rounded-lg hover:border-primary transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">Invoice #{invoice.id.replace('i', '')}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {format(parseISO(invoice.date), "d MMM yyyy")}
-                        </p>
-                        <div className="mt-2">
-                          {invoice.tests.map((test, idx) => {
-                            const testInfo = labData.tests.find(t => t.id === test.testId);
-                            return (
-                              <div key={`${invoice.id}-${idx}`} className="text-sm">
-                                {testInfo?.name} - ₹{test.price.toFixed(2)}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <div>
-                        <div className={`px-2 py-1 text-xs rounded-full ${
-                          invoice.status === "Paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {invoice.status}
-                        </div>
-                        <p className="text-md font-medium mt-2 text-right">
-                          ₹{invoice.netAmount.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1 text-right">
-                          {invoice.paymentMode}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                No invoices available for this patient.
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <div className="text-center py-12 text-muted-foreground">
-            Patient history will be available soon.
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
       
-      {/* Report View Dialog */}
+      {/* Content based on active tab */}
+      {activeTab === "reports" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Test Reports</h2>
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+              <FilePlus className="h-4 w-4 mr-2" /> Add Test
+            </Button>
+          </div>
+          
+          {/* Reports List */}
+          {reports.length > 0 ? (
+            <div className="space-y-4">
+              {reports.map(report => {
+                const test = labData.tests.find(t => t.id === report.testId);
+                return (
+                  <div 
+                    key={report.id} 
+                    className="p-4 border rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-medium">{test?.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(report.date), "d MMM yyyy")}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          report.status === "Completed" 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {report.status}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewReport(report.id)}
+                        >
+                          View
+                        </Button>
+                        {report.status === "Completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                          >
+                            Edit Results
+                          </Button>
+                        )}
+                        {report.status === "Pending" && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleEditReport(report)}
+                            className="h-8 w-8 text-blue-600"
+                          >
+                            <FileEdit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteConfirm(report.id)}
+                          className="h-8 w-8 text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              No reports available for this patient.
+            </div>
+          )}
+        </div>
+      )}
+      
+      {activeTab === "invoices" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Billing Information</h2>
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+              <FilePlus className="h-4 w-4 mr-2" /> Add Invoice
+            </Button>
+          </div>
+          
+          {/* Invoices List */}
+          {invoices.length > 0 ? (
+            <div className="space-y-4">
+              {invoices.map(invoice => (
+                <div 
+                  key={invoice.id} 
+                  className="p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium">Invoice #{invoice.id.replace('i', '')}</h3>
+                      <p className="text-sm text-gray-500">
+                        {format(parseISO(invoice.date), "d MMM yyyy")}
+                      </p>
+                      <p className="font-medium mt-1">₹{invoice.netAmount.toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        invoice.status === "Paid" 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {invoice.status}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              No invoices available for this patient.
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Report View Dialog - Removed print button */}
       <Dialog 
         open={selectedReportForView !== null} 
         onOpenChange={(open) => { if (!open) setSelectedReportForView(null); }}
       >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6 print-hidden">
+          <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Report</h2>
-            <PrintButton />
           </div>
           
           {selectedReportData && (

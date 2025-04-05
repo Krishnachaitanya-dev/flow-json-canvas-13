@@ -1,10 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { format } from "date-fns";
 import { Report, Patient, Test } from "@/context/LabContext";
 import { Microscope } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface ReportPrintViewProps {
   report: Report;
@@ -61,8 +59,6 @@ const ReportFooter = ({ dateString, timeString }: { dateString: string, timeStri
 };
 
 const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
-  const [showHeaderFooter, setShowHeaderFooter] = useState(true);
-  
   // Get current date and time for the printed timestamp
   const now = new Date();
   const timeString = format(now, "h:mm a");
@@ -90,115 +86,104 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <>
-      <div className="print-hidden flex items-center justify-end space-x-2 mb-4">
-        <Switch
-          id="header-footer-toggle"
-          checked={showHeaderFooter}
-          onCheckedChange={setShowHeaderFooter}
-        />
-        <Label htmlFor="header-footer-toggle">Show header/footer</Label>
-      </div>
-    
-      <div className="print-page-content p-6">
-        {/* Header section with logo and title - only shown if toggle is on */}
-        {showHeaderFooter && <ReportHeader />}
-        
-        {/* Patient Information - Updated to have labels next to values in single row */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6">
-          <div className="flex">
-            <span className="font-semibold w-28">Patient Name:</span>
-            <span>{patient.fullName}</span>
-          </div>
-          <div className="flex">
-            <span className="font-semibold w-28">Date:</span>
-            <span>{format(new Date(report.date), "d MMM yyyy")}</span>
-          </div>
-          
-          <div className="flex">
-            <span className="font-semibold w-28">Patient ID:</span>
-            <span>{patient.id.replace('p', '')}</span>
-          </div>
-          <div className="flex">
-            <span className="font-semibold w-28">Gender:</span>
-            <span>{patient.sex}</span>
-          </div>
-          
-          <div className="flex">
-            <span className="font-semibold w-28">Doctor:</span>
-            <span>Dr. Not Specified</span>
-          </div>
-          <div className="flex">
-            <span className="font-semibold w-28">Age:</span>
-            <span>{patient.age} years</span>
-          </div>
+    <div className="print-page-content p-6">
+      {/* Always show header and footer in the report view since print options are removed */}
+      <ReportHeader />
+      
+      {/* Patient Information */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6">
+        <div className="flex">
+          <span className="font-semibold w-28">Patient Name:</span>
+          <span>{patient.fullName}</span>
+        </div>
+        <div className="flex">
+          <span className="font-semibold w-28">Date:</span>
+          <span>{format(new Date(report.date), "d MMM yyyy")}</span>
         </div>
         
-        {/* Results Table */}
-        <table className="w-full border-collapse mb-6">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-4 py-2 text-left">Test Name</th>
-              <th className="border px-4 py-2 text-left">Result</th>
-              <th className="border px-4 py-2 text-left">Reference Range</th>
-              <th className="border px-4 py-2 text-left">Unit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(resultCategories).map(([category, results], catIndex) => (
-              <React.Fragment key={`category-${catIndex}`}>
-                <tr>
-                  <td colSpan={4} className="border px-4 py-2 bg-gray-50 font-medium">
-                    {category}
-                  </td>
-                </tr>
-                {results.map((result, index) => {
-                  // Check if result is outside reference range
-                  const isAbnormal = (() => {
-                    if (!result.referenceRange) return false;
-                    
-                    // Extract numbers from the reference range
-                    const rangeMatch = result.referenceRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
-                    if (rangeMatch) {
-                      const min = parseFloat(rangeMatch[1]);
-                      const max = parseFloat(rangeMatch[2]);
-                      return parseFloat(result.value) < min || parseFloat(result.value) > max;
-                    }
-                    
-                    // Handle ranges with < or > symbols
-                    if (result.referenceRange.includes('<')) {
-                      const maxVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
-                      return parseFloat(result.value) >= maxVal;
-                    }
-                    
-                    if (result.referenceRange.includes('>')) {
-                      const minVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
-                      return parseFloat(result.value) <= minVal;
-                    }
-                    
-                    return false;
-                  })();
-                  
-                  return (
-                    <tr key={`result-${index}`}>
-                      <td className="border px-4 py-2">{result.parameter}</td>
-                      <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500 font-medium' : ''}`}>
-                        {result.value}
-                      </td>
-                      <td className="border px-4 py-2">{result.referenceRange}</td>
-                      <td className="border px-4 py-2">{result.unit}</td>
-                    </tr>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+        <div className="flex">
+          <span className="font-semibold w-28">Patient ID:</span>
+          <span>{patient.id.replace('p', '')}</span>
+        </div>
+        <div className="flex">
+          <span className="font-semibold w-28">Gender:</span>
+          <span>{patient.sex}</span>
+        </div>
         
-        {/* Footer with colored bar and timestamp - only shown if toggle is on */}
-        {showHeaderFooter && <ReportFooter dateString={dateString} timeString={timeString} />}
+        <div className="flex">
+          <span className="font-semibold w-28">Doctor:</span>
+          <span>Dr. Not Specified</span>
+        </div>
+        <div className="flex">
+          <span className="font-semibold w-28">Age:</span>
+          <span>{patient.age} years</span>
+        </div>
       </div>
-    </>
+      
+      {/* Results Table */}
+      <table className="w-full border-collapse mb-6">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border px-4 py-2 text-left">Test Name</th>
+            <th className="border px-4 py-2 text-left">Result</th>
+            <th className="border px-4 py-2 text-left">Reference Range</th>
+            <th className="border px-4 py-2 text-left">Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(resultCategories).map(([category, results], catIndex) => (
+            <React.Fragment key={`category-${catIndex}`}>
+              <tr>
+                <td colSpan={4} className="border px-4 py-2 bg-gray-50 font-medium">
+                  {category}
+                </td>
+              </tr>
+              {results.map((result, index) => {
+                // Check if result is outside reference range
+                const isAbnormal = (() => {
+                  if (!result.referenceRange) return false;
+                  
+                  // Extract numbers from the reference range
+                  const rangeMatch = result.referenceRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                  if (rangeMatch) {
+                    const min = parseFloat(rangeMatch[1]);
+                    const max = parseFloat(rangeMatch[2]);
+                    return parseFloat(result.value) < min || parseFloat(result.value) > max;
+                  }
+                  
+                  // Handle ranges with < or > symbols
+                  if (result.referenceRange.includes('<')) {
+                    const maxVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                    return parseFloat(result.value) >= maxVal;
+                  }
+                  
+                  if (result.referenceRange.includes('>')) {
+                    const minVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                    return parseFloat(result.value) <= minVal;
+                  }
+                  
+                  return false;
+                })();
+                
+                return (
+                  <tr key={`result-${index}`}>
+                    <td className="border px-4 py-2">{result.parameter}</td>
+                    <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500 font-medium' : ''}`}>
+                      {result.value}
+                    </td>
+                    <td className="border px-4 py-2">{result.referenceRange}</td>
+                    <td className="border px-4 py-2">{result.unit}</td>
+                  </tr>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      
+      {/* Always show footer */}
+      <ReportFooter dateString={dateString} timeString={timeString} />
+    </div>
   );
 };
 
