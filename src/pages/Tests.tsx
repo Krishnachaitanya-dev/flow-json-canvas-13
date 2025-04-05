@@ -4,143 +4,71 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Edit, Trash, UserPlus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Test } from "@/context/LabContext";
+import EditTestDialog from "@/components/EditTestDialog";
 
 const Tests = () => {
-  const { labData, addTest, addReport, addInvoice, updateTest } = useLab();
+  const { labData, deleteTest } = useLab();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddingTest, setIsAddingTest] = useState(false);
-  const [isEditingTest, setIsEditingTest] = useState(false);
-  const [isAssigningTest, setIsAssigningTest] = useState(false);
-  const [selectedTest, setSelectedTest] = useState<any>(null);
-  const [newTest, setNewTest] = useState({
-    name: "",
-    category: "",
-    parameters: "1",
-    price: "",
-    code: "",
-  });
-  const [selectedPatientId, setSelectedPatientId] = useState("");
-  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isAddTestOpen, setIsAddTestOpen] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [testToDelete, setTestToDelete] = useState<string | null>(null);
   
-  // Filter tests based on search query
-  const filteredTests = labData.tests.filter(test => {
-    const query = searchQuery.toLowerCase();
-    return (
-      test.name.toLowerCase().includes(query) ||
-      test.code.toLowerCase().includes(query) ||
-      test.category.toLowerCase().includes(query)
-    );
+  // Filter tests based on search query and selected category
+  const filteredTests = labData.tests.filter((test) => {
+    const matchesSearch = test.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         test.code.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || test.category === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
-
-  // Handle adding a new test
-  const handleAddTest = () => {
-    if (!newTest.name || !newTest.category || !newTest.price || !newTest.code) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    const test = {
-      name: newTest.name,
-      category: newTest.category,
-      parameters: parseInt(newTest.parameters),
-      price: parseFloat(newTest.price),
-      code: newTest.code,
-    };
-
-    addTest(test);
-    setIsAddingTest(false);
-    setNewTest({
-      name: "",
-      category: "",
-      parameters: "1",
-      price: "",
-      code: "",
-    });
+  
+  // Get unique categories from tests
+  const categories = Array.from(new Set(labData.tests.map((test) => test.category)));
+  
+  // Handle edit test
+  const handleEditTest = (test: Test) => {
+    setSelectedTest(test);
   };
-
-  // Handle editing a test
-  const handleEditTest = () => {
-    if (!selectedTest.name || !selectedTest.category || !selectedTest.price || !selectedTest.code) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    updateTest({
-      ...selectedTest,
-      parameters: parseInt(selectedTest.parameters.toString()),
-      price: parseFloat(selectedTest.price.toString())
-    });
-    
-    setIsEditingTest(false);
-    setSelectedTest(null);
-    toast.success("Test updated successfully");
+  
+  // Handle delete test confirmation
+  const handleDeleteConfirm = (testId: string) => {
+    setTestToDelete(testId);
+    setIsDeleteConfirmOpen(true);
   };
-
-  // Open edit dialog
-  const openEditDialog = (test) => {
-    setSelectedTest({...test});
-    setIsEditingTest(true);
-  };
-
-  // Handle assigning test to a patient
-  const handleAssignTest = () => {
-    if (!selectedPatientId) {
-      toast.error("Please select a patient");
-      return;
+  
+  // Handle delete test
+  const handleDeleteTest = () => {
+    if (testToDelete) {
+      deleteTest(testToDelete);
+      setIsDeleteConfirmOpen(false);
+      setTestToDelete(null);
     }
-
-    // Create new report
-    const newReport = {
-      testId: selectedTest.id,
-      patientId: selectedPatientId,
-      date: new Date().toISOString().split('T')[0],
-      status: "Pending" as "Pending" | "Completed"
-    };
-    
-    // Create new invoice for the test
-    const newInvoice = {
-      patientId: selectedPatientId,
-      tests: [{ testId: selectedTest.id, price: selectedTest.price }],
-      totalAmount: selectedTest.price,
-      discountPercentage: 0,
-      discountAmount: 0,
-      netAmount: selectedTest.price,
-      paymentMode: "Cash" as "Cash" | "Card" | "UPI" | "Insurance",
-      amountPaid: 0,
-      balanceAmount: selectedTest.price,
-      date: new Date().toISOString().split('T')[0],
-      status: "Pending" as "Pending" | "Paid",
-    };
-    
-    addReport(newReport);
-    addInvoice(newInvoice);
-    
-    setIsAssigningTest(false);
-    setSelectedTest(null);
-    setSelectedPatientId("");
-    
-    const patient = labData.patients.find(p => p.id === selectedPatientId);
-    toast.success(`Test assigned to ${patient?.fullName}`);
-
-    // Optional: Navigate to patient detail page
-    navigate(`/patients/${selectedPatientId}`);
   };
 
   return (
     <Layout title="Tests">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -150,254 +78,128 @@ const Tests = () => {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => setIsAddingTest(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Test
-        </Button>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={selectedCategory === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory(null)}
+          >
+            All
+          </Button>
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Button>
+          ))}
+          
+          <Button 
+            onClick={() => setIsAddTestOpen(true)}
+            className="ml-auto sm:ml-4 bg-yellow-400 hover:bg-yellow-500 text-black font-medium"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" /> Add Test
+          </Button>
+        </div>
       </div>
       
-      <div className="space-y-4">
-        {filteredTests.map(test => (
-          <div key={test.id} className="p-4 border rounded-lg hover:border-primary transition-colors">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium">{test.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Category: {test.category}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Code: {test.code}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Parameters: {test.parameters}
-                </p>
-              </div>
-              <div className="flex flex-col items-end space-y-2">
-                <div className="text-lg font-semibold">
-                  ₹{test.price.toFixed(2)}
-                </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => openEditDialog(test)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex items-center"
-                    onClick={() => {
-                      setSelectedTest(test);
-                      setIsAssigningTest(true);
-                    }}
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Assign
-                  </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredTests.map((test) => (
+          <Card key={test.id} className="overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-lg">{test.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{test.category}</p>
+                    <p className="text-sm mt-2">
+                      <span className="font-medium">Code:</span> {test.code}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Parameters:</span> {test.parameters}
+                    </p>
+                    <p className="text-md font-medium mt-2">₹{test.price.toFixed(2)}</p>
+                  </div>
+                  
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditTest(test)}
+                      className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteConfirm(test.id)}
+                      className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
         
         {filteredTests.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            {searchQuery 
-              ? "No tests match your search criteria" 
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            {searchQuery || selectedCategory
+              ? "No tests match your search criteria"
               : "No tests found. Add a test to get started."}
           </div>
         )}
       </div>
-
-      {/* Add Test Dialog */}
-      <Dialog open={isAddingTest} onOpenChange={setIsAddingTest}>
-        <DialogContent className="max-w-md">
+      
+      {/* Edit Test Dialog */}
+      <EditTestDialog
+        test={selectedTest}
+        open={selectedTest !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTest(null);
+        }}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the test
+              and remove it from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTest}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Add Test Dialog - Placeholder, we'll implement this in a separate component */}
+      <Dialog open={isAddTestOpen} onOpenChange={setIsAddTestOpen}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Test</DialogTitle>
           </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            <div>
-              <Label htmlFor="name">Test Name</Label>
-              <Input
-                id="name"
-                value={newTest.name}
-                onChange={(e) => setNewTest({...newTest, name: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={newTest.category}
-                onChange={(e) => setNewTest({...newTest, category: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="code">Test Code</Label>
-              <Input
-                id="code"
-                value={newTest.code}
-                onChange={(e) => setNewTest({...newTest, code: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="parameters">Number of Parameters</Label>
-              <Input
-                id="parameters"
-                type="number"
-                min="1"
-                value={newTest.parameters}
-                onChange={(e) => setNewTest({...newTest, parameters: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="price">Price (₹)</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={newTest.price}
-                onChange={(e) => setNewTest({...newTest, price: e.target.value})}
-              />
-            </div>
+          <div className="py-4">
+            <p>This feature will be implemented soon.</p>
           </div>
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingTest(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddTest}>
-              Add Test
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Test Dialog */}
-      <Dialog open={isEditingTest} onOpenChange={setIsEditingTest}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Test</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            {selectedTest && (
-              <>
-                <div>
-                  <Label htmlFor="edit-name">Test Name</Label>
-                  <Input
-                    id="edit-name"
-                    value={selectedTest.name}
-                    onChange={(e) => setSelectedTest({...selectedTest, name: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit-category">Category</Label>
-                  <Input
-                    id="edit-category"
-                    value={selectedTest.category}
-                    onChange={(e) => setSelectedTest({...selectedTest, category: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit-code">Test Code</Label>
-                  <Input
-                    id="edit-code"
-                    value={selectedTest.code}
-                    onChange={(e) => setSelectedTest({...selectedTest, code: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit-parameters">Number of Parameters</Label>
-                  <Input
-                    id="edit-parameters"
-                    type="number"
-                    min="1"
-                    value={selectedTest.parameters}
-                    onChange={(e) => setSelectedTest({...selectedTest, parameters: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit-price">Price (₹)</Label>
-                  <Input
-                    id="edit-price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={selectedTest.price}
-                    onChange={(e) => setSelectedTest({...selectedTest, price: e.target.value})}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingTest(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditTest}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Assign to Patient Dialog */}
-      <Dialog open={isAssigningTest} onOpenChange={setIsAssigningTest}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Test to Patient</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            {selectedTest && (
-              <div>
-                <p className="font-medium">{selectedTest.name}</p>
-                <p className="text-sm text-muted-foreground">₹{selectedTest.price.toFixed(2)}</p>
-              </div>
-            )}
-            
-            <div>
-              <Label htmlFor="patient">Select Patient</Label>
-              <Select
-                value={selectedPatientId}
-                onValueChange={setSelectedPatientId}
-              >
-                <SelectTrigger id="patient">
-                  <SelectValue placeholder="Select a patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {labData.patients.map(patient => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.fullName} ({patient.age} years)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssigningTest(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAssignTest}>
-              Assign Test
-            </Button>
+            <Button onClick={() => setIsAddTestOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

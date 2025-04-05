@@ -29,6 +29,8 @@ export interface Test {
   parameters: number;
   price: number;
   code: string;
+  description?: string;
+  instructions?: string;
 }
 
 export interface Report {
@@ -128,9 +130,11 @@ const initialLabData: LabData = {
       id: 't1',
       name: 'Complete Blood Count (CBC)',
       category: 'Hematology',
-      parameters: 3,
+      parameters: 5,
       price: 25.00,
       code: 'CBC001',
+      description: 'Evaluates overall health and detects a wide range of disorders.',
+      instructions: 'No special preparation required.',
     },
     {
       id: 't2',
@@ -139,6 +143,8 @@ const initialLabData: LabData = {
       parameters: 4,
       price: 35.00,
       code: 'LIP001',
+      description: 'Measures cholesterol and related fats in the blood to assess cardiovascular health.',
+      instructions: 'Fast for 9-12 hours before the test. Water is allowed.',
     },
     {
       id: 't3',
@@ -147,14 +153,18 @@ const initialLabData: LabData = {
       parameters: 1,
       price: 15.00,
       code: 'GLU001',
+      description: 'Measures the amount of glucose in the blood to screen for diabetes.',
+      instructions: 'Fast for 8 hours before the test for fasting glucose.',
     },
     {
       id: 't4',
       name: 'Liver Function Test',
       category: 'Biochemistry',
-      parameters: 3,
+      parameters: 6,
       price: 40.00,
       code: 'LFT001',
+      description: 'Assesses the health of the liver by measuring proteins, liver enzymes, and bilirubin.',
+      instructions: 'No special preparation required. Avoid alcohol for 24 hours before the test.',
     },
     {
       id: 't5',
@@ -163,6 +173,8 @@ const initialLabData: LabData = {
       parameters: 3,
       price: 45.00,
       code: 'THY001',
+      description: 'Evaluates thyroid function by measuring thyroid hormone levels.',
+      instructions: 'No special preparation required. Take medications as usual.',
     },
   ],
   reports: [
