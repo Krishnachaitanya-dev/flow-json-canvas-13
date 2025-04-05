@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { useLab, Invoice } from "@/context/LabContext";
-import { Microscope, Phone, Mail, MapPin, Calendar, CreditCard } from "lucide-react";
+import { Microscope, Phone, Mail, MapPin } from "lucide-react";
 import PrintButton from "./PrintButton";
 
 interface InvoiceDetailsDialogProps {
@@ -52,76 +52,69 @@ const InvoiceDetailsDialog = ({ invoice, open, onOpenChange }: InvoiceDetailsDia
             </div>
           </div>
           
-          <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-6"></div>
+          <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-4"></div>
           
-          {/* Invoice Information */}
+          {/* Patient and Invoice Information in two columns */}
           <div className="flex justify-between mb-6">
-            <div className="w-1/2">
+            <div className="w-1/2 pr-4">
               <h3 className="font-bold text-gray-700 mb-2">Patient Information</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-semibold text-lg">{patient?.fullName}</p>
+              <p className="font-semibold">{patient?.fullName}</p>
+              <div className="text-sm text-gray-600 flex items-center mt-1">
+                <span className="mr-1">ID:</span> {patient?.id.replace('p', '')}
+              </div>
+              <div className="text-sm text-gray-600 flex items-center mt-1">
+                <Phone className="h-3.5 w-3.5 mr-1" /> {patient?.mobile}
+              </div>
+              {patient?.email && (
                 <div className="text-sm text-gray-600 flex items-center mt-1">
-                  <span className="mr-2">ID:</span> {patient?.id.replace('p', '')}
+                  <Mail className="h-3.5 w-3.5 mr-1" /> {patient?.email}
                 </div>
-                <div className="text-sm text-gray-600 flex items-center mt-1">
-                  <Phone className="h-3.5 w-3.5 mr-2" /> {patient?.mobile}
-                </div>
-                {patient?.email && (
-                  <div className="text-sm text-gray-600 flex items-center mt-1">
-                    <Mail className="h-3.5 w-3.5 mr-2" /> {patient?.email}
-                  </div>
-                )}
-                <div className="text-sm text-gray-600 flex items-start mt-1">
-                  <MapPin className="h-3.5 w-3.5 mr-2 mt-0.5" /> {patient?.address}
-                </div>
+              )}
+              <div className="text-sm text-gray-600 flex items-start mt-1">
+                <MapPin className="h-3.5 w-3.5 mr-1 mt-0.5" /> {patient?.address}
               </div>
             </div>
             
-            <div className="w-1/2 pl-6">
+            <div className="w-1/2 pl-4">
               <h3 className="font-bold text-gray-700 mb-2">Invoice Details</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm flex justify-between mb-2">
-                  <span className="font-medium">Invoice Number:</span>
-                  <span>{invoice.id.replace('i', 'INV-')}</span>
-                </div>
-                <div className="text-sm flex justify-between mb-2">
-                  <span className="font-medium">Date:</span>
-                  <span>{format(new Date(invoice.date), "dd MMM yyyy")}</span>
-                </div>
-                <div className="text-sm flex justify-between mb-2">
-                  <span className="font-medium">Payment Status:</span>
-                  <Badge 
-                    variant={invoice.status === "Paid" ? "outline" : "secondary"}
-                    className={`${
-                      invoice.status === "Paid" 
-                        ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                        : "bg-amber-100 text-amber-800 hover:bg-amber-100"
-                    }`}
-                  >
-                    {invoice.status}
-                  </Badge>
-                </div>
-                <div className="text-sm flex justify-between">
-                  <span className="font-medium">Payment Method:</span>
-                  <div className="flex items-center">
-                    <CreditCard className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-                    <span>{invoice.paymentMode}</span>
-                  </div>
-                </div>
+              <div className="text-sm flex justify-between mb-1">
+                <span className="font-medium">Invoice Number:</span>
+                <span>INV-{invoice.id.replace('i', '')}</span>
+              </div>
+              <div className="text-sm flex justify-between mb-1">
+                <span className="font-medium">Date:</span>
+                <span>{format(new Date(invoice.date), "dd MMM yyyy")}</span>
+              </div>
+              <div className="text-sm flex justify-between mb-1">
+                <span className="font-medium">Payment Status:</span>
+                <Badge 
+                  variant={invoice.status === "Paid" ? "outline" : "secondary"}
+                  className={`${
+                    invoice.status === "Paid" 
+                      ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                      : "bg-amber-100 text-amber-800 hover:bg-amber-100"
+                  }`}
+                >
+                  {invoice.status}
+                </Badge>
+              </div>
+              <div className="text-sm flex justify-between mb-1">
+                <span className="font-medium">Payment Method:</span>
+                <span>{invoice.paymentMode}</span>
               </div>
             </div>
           </div>
           
-          {/* Test Items Table */}
+          {/* Test Items Table - Simplified for better printing */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-700 mb-2">Test Details</h3>
             <Table>
               <TableHeader className="bg-gray-100">
                 <TableRow>
                   <TableHead className="w-[40%]">Test Name</TableHead>
-                  <TableHead className="w-[15%]">Test Code</TableHead>
-                  <TableHead className="w-[15%]">Category</TableHead>
-                  <TableHead className="w-[15%] text-right">Price (₹)</TableHead>
+                  <TableHead className="w-[20%]">Test Code</TableHead>
+                  <TableHead className="w-[20%]">Category</TableHead>
+                  <TableHead className="w-[20%] text-right">Price (₹)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -140,24 +133,24 @@ const InvoiceDetailsDialog = ({ invoice, open, onOpenChange }: InvoiceDetailsDia
             </Table>
           </div>
           
-          {/* Payment Summary */}
+          {/* Payment Summary - Right aligned */}
           <div className="flex justify-end mb-6">
             <div className="w-64 bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between mb-2">
+              <div className="flex justify-between mb-1">
                 <span className="font-medium">Subtotal:</span>
                 <span>₹{invoice.totalAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between mb-2">
+              <div className="flex justify-between mb-1">
                 <span className="font-medium">Discount ({invoice.discountPercentage}%):</span>
                 <span>₹{invoice.discountAmount.toFixed(2)}</span>
               </div>
               <Separator className="my-2" />
-              <div className="flex justify-between font-semibold text-lg mb-2">
+              <div className="flex justify-between font-semibold text-lg mb-1">
                 <span>Total:</span>
                 <span>₹{invoice.netAmount.toFixed(2)}</span>
               </div>
               <Separator className="my-2" />
-              <div className="flex justify-between mb-2">
+              <div className="flex justify-between mb-1">
                 <span className="font-medium">Amount Paid:</span>
                 <span>₹{invoice.amountPaid.toFixed(2)}</span>
               </div>
@@ -170,8 +163,8 @@ const InvoiceDetailsDialog = ({ invoice, open, onOpenChange }: InvoiceDetailsDia
             </div>
           </div>
           
-          {/* Terms and Notes */}
-          <div className="border-t border-gray-200 pt-4 mb-6">
+          {/* Terms and Notes - Simplified */}
+          <div className="border-t border-gray-200 pt-4 mb-5">
             <h3 className="font-bold text-gray-700 mb-2">Terms & Notes</h3>
             <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
               <li>Results will be provided within 24-48 hours after sample collection.</li>
@@ -182,13 +175,13 @@ const InvoiceDetailsDialog = ({ invoice, open, onOpenChange }: InvoiceDetailsDia
           </div>
           
           {/* Thank You Note */}
-          <div className="text-center py-4 bg-blue-50 rounded-lg mb-4">
+          <div className="text-center py-3 bg-blue-50 rounded-lg mb-4">
             <p className="text-blue-800 font-medium">Thank you for choosing NVR Diagnostics!</p>
             <p className="text-sm text-blue-600">We care about your health and wellness.</p>
           </div>
           
           {/* Footer */}
-          <div className="text-center text-sm text-gray-500 mt-6">
+          <div className="text-center text-sm text-gray-500 mt-4">
             <p>This is a computer-generated invoice and doesn't require a signature.</p>
             <p className="mt-1">© {new Date().getFullYear()} NVR Diagnostics. All Rights Reserved.</p>
           </div>

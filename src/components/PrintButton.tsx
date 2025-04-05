@@ -26,12 +26,23 @@ export const PrintButton = ({
       setIsPrinting(true);
       document.body.classList.add('is-printing');
       
-      // Apply any additional styles needed right before printing
+      // Hide all elements except the print content
+      const allElements = document.querySelectorAll('body > *:not(.print-container)');
+      allElements.forEach(el => {
+        if (!el.classList.contains('print-page-content') && !el.closest('.print-page-content')) {
+          (el as HTMLElement).style.display = 'none';
+        }
+      });
+      
+      // Set print content to be visible and positioned correctly
       const printContent = document.querySelector('.print-page-content');
       if (printContent) {
-        // Store original class list to restore after printing
-        const originalClassName = printContent.className;
-        (printContent as any)._originalClassName = originalClassName;
+        (printContent as HTMLElement).style.position = 'static';
+        (printContent as HTMLElement).style.width = '100%';
+        (printContent as HTMLElement).style.maxWidth = '210mm';
+        (printContent as HTMLElement).style.margin = '0 auto';
+        (printContent as HTMLElement).style.padding = '10mm';
+        (printContent as HTMLElement).style.backgroundColor = 'white';
       }
     };
     
@@ -39,11 +50,21 @@ export const PrintButton = ({
       setIsPrinting(false);
       document.body.classList.remove('is-printing');
       
-      // Restore any styles changed before printing
+      // Restore the visibility of all elements
+      const allElements = document.querySelectorAll('body > *');
+      allElements.forEach(el => {
+        (el as HTMLElement).style.display = '';
+      });
+      
+      // Restore print content styling
       const printContent = document.querySelector('.print-page-content');
-      if (printContent && (printContent as any)._originalClassName) {
-        printContent.className = (printContent as any)._originalClassName;
-        delete (printContent as any)._originalClassName;
+      if (printContent) {
+        (printContent as HTMLElement).style.position = '';
+        (printContent as HTMLElement).style.width = '';
+        (printContent as HTMLElement).style.maxWidth = '';
+        (printContent as HTMLElement).style.margin = '';
+        (printContent as HTMLElement).style.padding = '';
+        (printContent as HTMLElement).style.backgroundColor = '';
       }
     };
 
@@ -64,12 +85,18 @@ export const PrintButton = ({
     
     // Force any current UI updates to complete
     setTimeout(() => {
-      // Take a snapshot of the current document state before printing
+      // Ensure dialog content is visible and properly sized before printing
       const printContent = document.querySelector('.print-page-content');
+      const dialogContent = document.querySelector('[role="dialog"]');
+      
       if (printContent) {
-        // Set the content to be positioned correctly for printing
-        (printContent as HTMLElement).style.position = 'static';
-        (printContent as HTMLElement).style.width = '100%';
+        // Prepare the content for printing
+        (printContent as HTMLElement).style.overflow = 'visible';
+        
+        if (dialogContent) {
+          (dialogContent as HTMLElement).style.maxHeight = 'none';
+          (dialogContent as HTMLElement).style.maxWidth = 'none';
+        }
       }
       
       // Trigger the print dialog
