@@ -34,14 +34,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-blue-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <img
-              src="/lovable-uploads/77794296-1445-47b0-9505-0bf52f9b1685.png"
+              src="/lovable-uploads/0c90d00f-da07-4ebc-8043-1ffd9408de83.png"
               alt="NVR Diagnostics Logo"
-              className="h-16"
+              className="h-24 w-auto"
             />
           </div>
-          <CardTitle className="text-3xl font-bold">NVR DIAGNOSTICS</CardTitle>
+          <CardTitle className="text-3xl font-bold text-red-600">DIAGNOSTICS</CardTitle>
           <CardDescription>Sign in to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>

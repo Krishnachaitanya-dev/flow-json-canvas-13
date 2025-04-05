@@ -4,29 +4,51 @@ import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, FileText, Eye, Printer } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Search, FileText, Eye, Printer, CalendarIcon } from "lucide-react";
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import PrintButton from "@/components/PrintButton";
 import ReportPrintView from "@/components/ReportPrintView";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const Reports = () => {
   const { labData } = useLab();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   
-  // Filter reports based on search query
+  // Filter reports based on search query and date filter
   const filteredReports = labData.reports.filter(report => {
     const query = searchQuery.toLowerCase();
     const patient = labData.patients.find(p => p.id === report.patientId);
     const test = labData.tests.find(t => t.id === report.testId);
     
-    return (
+    // Check text search
+    const matchesText = 
       patient?.fullName.toLowerCase().includes(query) ||
       test?.name.toLowerCase().includes(query) ||
-      report.id.toLowerCase().includes(query)
-    );
+      report.id.toLowerCase().includes(query);
+    
+    // Check date filter
+    let matchesDate = true;
+    if (dateFilter) {
+      const reportDate = parseISO(report.date);
+      matchesDate = isWithinInterval(reportDate, {
+        start: startOfDay(dateFilter),
+        end: endOfDay(dateFilter)
+      });
+    }
+    
+    return matchesText && matchesDate;
   });
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setDateFilter(undefined);
+  };
   
   // Get report details
   const getReportDetails = (reportId: string) => {
@@ -43,15 +65,54 @@ const Reports = () => {
 
   return (
     <Layout title="Reports">
-      <div className="mb-6 flex justify-between items-center">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search reports by test name or patient name"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Text search */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search reports by test name or patient name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {/* Date picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "w-full sm:w-[240px]",
+                  dateFilter ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={dateFilter}
+                onSelect={setDateFilter}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear filters button */}
+          {(searchQuery || dateFilter) && (
+            <Button 
+              variant="ghost" 
+              onClick={clearFilters} 
+              className="w-full sm:w-auto"
+            >
+              Clear filters
+            </Button>
+          )}
         </div>
       </div>
       
@@ -98,7 +159,7 @@ const Reports = () => {
         
         {filteredReports.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {searchQuery 
+            {searchQuery || dateFilter
               ? "No reports match your search criteria" 
               : "No reports found."
             }
