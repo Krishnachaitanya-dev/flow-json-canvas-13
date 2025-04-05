@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -104,6 +103,7 @@
   /* Hide everything by default */
   body * {
     visibility: hidden;
+    display: none;
   }
   
   /* Only show print container content */
@@ -113,16 +113,19 @@
   .print-page-content * {
     visibility: visible !important;
     overflow: visible !important;
+    display: block;
   }
   
   /* Make sure images are visible */
+  img,
+  .print-header img,
   .print-container img,
-  .print-page-content img,
-  .print-visible {
+  .print-page-content img {
     display: block !important;
     visibility: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    max-width: 100%;
   }
   
   /* Hide print-specific UI elements */
@@ -137,11 +140,11 @@
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    padding: 10mm 8mm !important;
     margin: 0 !important;
     background-color: white !important;
     page-break-after: always;
     page-break-inside: avoid;
+    display: block !important;
   }
   
   /* Reset dialog styling for print */
@@ -173,9 +176,24 @@
     width: 100% !important;
     border-collapse: collapse !important;
     page-break-inside: avoid !important;
+    display: table !important;
+  }
+  
+  thead {
+    display: table-header-group !important;
+  }
+  
+  tbody {
+    display: table-row-group !important;
+  }
+  
+  tr {
+    display: table-row !important;
+    page-break-inside: avoid !important;
   }
   
   th, td {
+    display: table-cell !important;
     border: 1px solid #ddd !important;
     padding: 2px 4px !important;
     font-size: 10pt !important;
@@ -199,5 +217,26 @@
     color: #2563eb !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  
+  /* Fix flex display for print */
+  .print-header {
+    display: flex !important;
+  }
+  
+  .flex {
+    display: flex !important;
+  }
+  
+  .grid {
+    display: grid !important;
+  }
+  
+  .items-center {
+    align-items: center !important;
+  }
+  
+  .justify-between {
+    justify-content: space-between !important;
   }
 }

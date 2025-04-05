@@ -54,7 +54,7 @@ export const PrintButton = ({
       // Add print-specific class to body
       document.body.classList.add('is-printing');
       
-      // Set print-specific styles for single page printing
+      // Set print-specific styles for single page printing with improved scaling
       const style = document.createElement('style');
       style.id = 'print-style';
       style.innerHTML = `
@@ -65,15 +65,34 @@ export const PrintButton = ({
           }
           html, body {
             height: 100%;
+            width: 100%;
             font-size: 11pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           .print-page-content {
+            position: relative !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
             page-break-after: always;
             page-break-inside: avoid;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .print-header {
+            display: flex !important;
+            visibility: visible !important;
           }
           img {
             display: block !important;
             visibility: visible !important;
+            print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
+          }
+          .print-hidden {
+            display: none !important;
           }
         }
       `;

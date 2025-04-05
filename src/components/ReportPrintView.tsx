@@ -35,7 +35,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="print-page-content max-w-4xl mx-auto bg-white">
+    <div className="print-page-content max-w-4xl mx-auto bg-white p-4">
       {/* Logo and title section */}
       <div className="print-header flex justify-between items-center mb-4">
         <div className="flex items-center">
@@ -51,7 +51,10 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
             src="/lovable-uploads/852c0452-f823-44bb-a2b4-9cccd3034379.png" 
             alt="NVR Diagnostics" 
             className="h-10 print-visible"
-            style={{ printColorAdjust: 'exact' }}
+            style={{ 
+              printColorAdjust: 'exact',
+              WebkitPrintColorAdjust: 'exact'
+            }}
           />
         </div>
       </div>
