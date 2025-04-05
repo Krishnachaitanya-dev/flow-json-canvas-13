@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Search, Edit, Trash2, Flask, Beaker, Flare, Tag } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash2, FileSpreadsheet, Beaker, Flame, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -35,7 +34,6 @@ const Tests = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [testToDelete, setTestToDelete] = useState<string | null>(null);
   
-  // Filter tests based on search query and selected category
   const filteredTests = labData.tests.filter((test) => {
     const matchesSearch = test.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          test.code.toLowerCase().includes(searchQuery.toLowerCase());
@@ -43,21 +41,17 @@ const Tests = () => {
     return matchesSearch && matchesCategory;
   });
   
-  // Get unique categories from tests
   const categories = Array.from(new Set(labData.tests.map((test) => test.category)));
   
-  // Handle edit test
   const handleEditTest = (test: Test) => {
     setSelectedTest(test);
   };
   
-  // Handle delete test confirmation
   const handleDeleteConfirm = (testId: string) => {
     setTestToDelete(testId);
     setIsDeleteConfirmOpen(true);
   };
   
-  // Handle delete test
   const handleDeleteTest = () => {
     if (testToDelete) {
       deleteTest(testToDelete);
@@ -142,7 +136,6 @@ const Tests = () => {
                   Parameters: {test.parameters}
                 </p>
                 
-                {/* Actions */}
                 <div className="flex space-x-2 mt-2">
                   <Button
                     variant="ghost"
@@ -190,7 +183,6 @@ const Tests = () => {
         )}
       </div>
       
-      {/* Edit Test Dialog */}
       <EditTestDialog
         test={selectedTest}
         open={selectedTest !== null}
@@ -199,7 +191,6 @@ const Tests = () => {
         }}
       />
       
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent className="bg-white border-none rounded-2xl">
           <AlertDialogHeader>
@@ -221,7 +212,6 @@ const Tests = () => {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Add Test Dialog - Placeholder, we'll implement this in a separate component */}
       <Dialog open={isAddTestOpen} onOpenChange={setIsAddTestOpen}>
         <DialogContent className="bg-white border-none rounded-2xl">
           <DialogHeader>
@@ -239,7 +229,6 @@ const Tests = () => {
   );
 };
 
-// Helper function to get color based on test category
 function getCategoryColor(category: string) {
   const colors = {
     "Biochemistry": "bg-gradient-to-r from-futuristic-blue to-futuristic-cyan",

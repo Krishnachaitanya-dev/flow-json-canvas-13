@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -7,7 +6,6 @@ import {
   User, 
   Home, 
   Users, 
-  Flask, 
   FileSpreadsheet, 
   Receipt, 
   UserPlus,
@@ -21,7 +19,7 @@ import ImportExportButtons from "./ImportExportButtons";
 const menuItems = [
   { path: "/dashboard", label: "Dashboard", icon: Home },
   { path: "/patients", label: "Patients", icon: Users },
-  { path: "/tests", label: "Tests", icon: Flask },
+  { path: "/tests", label: "Tests", icon: FileSpreadsheet },
   { path: "/reports", label: "Reports", icon: FileSpreadsheet },
   { path: "/invoices", label: "Invoices", icon: Receipt },
 ];
@@ -36,7 +34,6 @@ const Layout = ({ children, title }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Function to format the current date
   const formatDate = () => {
     const date = new Date();
     const options: Intl.DateTimeFormatOptions = { 
@@ -53,14 +50,12 @@ const Layout = ({ children, title }: LayoutProps) => {
     navigate("/login");
   };
 
-  // Function to get the active menu item
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   return (
     <div className="min-h-screen flex flex-col relative pb-16 bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Top header */}
       <header className="h-16 border-b flex items-center justify-between px-6 bg-white shadow-sm z-10">
         <div className="flex items-center space-x-2">
           <Sparkles className="h-5 w-5 text-futuristic-purple" />
@@ -107,7 +102,6 @@ const Layout = ({ children, title }: LayoutProps) => {
         </div>
       </header>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-auto">
         {title === "Dashboard" && (
           <div className="p-8 bg-gradient-to-r from-futuristic-blue to-futuristic-purple text-white">
@@ -122,7 +116,6 @@ const Layout = ({ children, title }: LayoutProps) => {
         </main>
       </div>
 
-      {/* Bottom navigation (mobile) - now fixed to bottom */}
       <nav className="h-16 border-t grid grid-cols-5 bg-white shadow-lg fixed bottom-0 left-0 right-0 z-50">
         {menuItems.map((item) => (
           <button

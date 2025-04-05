@@ -1,9 +1,8 @@
-
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileSpreadsheet, Receipt, CheckCircle, TrendingUp, Activity, User } from "lucide-react";
+import { Users, FileSpreadsheet as FileIcon, Receipt as ReceiptIcon, CheckCircle, TrendingUp, Activity, User } from "lucide-react";
 import { format } from "date-fns";
 
 const Dashboard = () => {
@@ -34,14 +33,14 @@ const Dashboard = () => {
         <StatCard 
           title="Pending Reports" 
           value={pendingReports} 
-          icon={<FileSpreadsheet className="h-10 w-10" />} 
+          icon={<FileIcon className="h-10 w-10" />} 
           color="bg-gradient-to-br from-futuristic-yellow to-futuristic-orange"
           link="/reports"
         />
         <StatCard 
           title="Pending Payments" 
           value={pendingPayments} 
-          icon={<Receipt className="h-10 w-10" />} 
+          icon={<ReceiptIcon className="h-10 w-10" />} 
           color="bg-gradient-to-br from-futuristic-red to-futuristic-pink"
           link="/invoices"
         />
@@ -126,19 +125,19 @@ const Dashboard = () => {
             />
             <QuickLink 
               title="New Test" 
-              icon={<Flask className="h-6 w-6" />} 
+              icon={<FileIcon className="h-6 w-6" />} 
               link="/tests" 
               color="bg-gradient-to-br from-futuristic-teal to-futuristic-cyan"
             />
             <QuickLink 
               title="New Report" 
-              icon={<FileSpreadsheet className="h-6 w-6" />} 
+              icon={<FileIcon className="h-6 w-6" />} 
               link="/reports" 
               color="bg-gradient-to-br from-futuristic-yellow to-futuristic-orange"
             />
             <QuickLink 
               title="New Invoice" 
-              icon={<Receipt className="h-6 w-6" />} 
+              icon={<ReceiptIcon className="h-6 w-6" />} 
               link="/invoices" 
               color="bg-gradient-to-br from-futuristic-pink to-futuristic-purple"
             />
@@ -201,10 +200,5 @@ const QuickLink = ({ title, icon, link, color }: QuickLinkProps) => {
     </Link>
   );
 };
-
-const UserPlus = Users;
-const FileSpreadsheet = FileSpreadsheet;
-const Receipt = Receipt;
-const Flask = Flask;
 
 export default Dashboard;
