@@ -136,7 +136,7 @@
   /* Position the print content for proper layout */
   .print-container,
   .print-page-content {
-    position: absolute !important;
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
