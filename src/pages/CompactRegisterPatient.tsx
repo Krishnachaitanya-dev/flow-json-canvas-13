@@ -442,7 +442,7 @@ const CompactRegisterPatient = () => {
             
             {/* Test Selection Section */}
             <div>
-              <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Test Selection</h2>
+{/*               <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Test Selection</h2> */}
               
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
@@ -555,7 +555,7 @@ const CompactRegisterPatient = () => {
             
             {/* Payment Information Section */}
             <div>
-              <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Payment Information</h2>
+{/*               <h2 className="text-xl font-semibold text-center text-gray-800 mb-4">Payment Information</h2> */}
               
               <div className="grid grid-cols-7 gap-4">
                 <div className="space-y-1">
