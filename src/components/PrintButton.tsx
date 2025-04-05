@@ -53,7 +53,41 @@ export const PrintButton = ({
     setTimeout(() => {
       // Add print-specific class to body
       document.body.classList.add('is-printing');
+      
+      // Set print-specific styles for single page printing
+      const style = document.createElement('style');
+      style.id = 'print-style';
+      style.innerHTML = `
+        @media print {
+          @page {
+            size: portrait;
+            margin: 8mm;
+          }
+          html, body {
+            height: 100%;
+            font-size: 11pt !important;
+          }
+          .print-page-content {
+            page-break-after: always;
+            page-break-inside: avoid;
+          }
+          img {
+            display: block !important;
+            visibility: visible !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      
       window.print();
+      
+      // Clean up print styles
+      setTimeout(() => {
+        const printStyle = document.getElementById('print-style');
+        if (printStyle) {
+          printStyle.remove();
+        }
+      }, 500);
     }, 300);
   };
 
