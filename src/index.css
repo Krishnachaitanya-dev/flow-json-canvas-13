@@ -81,6 +81,7 @@
   }
 }
 
+/* General print styles */
 @media print {
   body * {
     visibility: hidden;
@@ -114,7 +115,7 @@
   html, body {
     height: 100%;
     overflow: hidden;
-    background-color: #fff;
+    background-color: #fff !important;
     margin: 0;
     padding: 0;
   }
@@ -154,10 +155,46 @@
     position: absolute !important;
     background: white !important;
     box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   /* Hide dialog background */
   [data-radix-popper-content-wrapper] {
     transform: none !important;
+  }
+  
+  /* Ensure tables display properly in print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  th, td {
+    border: 1px solid #ddd !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* Fix gradient display in print */
+  .bg-gradient-to-r {
+    background: linear-gradient(to right, #ea384c, #1EAEDB, #0FA0CE) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Make sure colors print */
+  .text-red-500 {
+    color: #ef4444 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .text-blue-600 {
+    color: #2563eb !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

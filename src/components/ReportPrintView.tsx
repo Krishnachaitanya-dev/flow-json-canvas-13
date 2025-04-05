@@ -1,6 +1,7 @@
 
 import { format } from "date-fns";
 import { Report, Patient, Test } from "@/context/LabContext";
+import { Microscope } from "lucide-react";
 
 interface ReportPrintViewProps {
   report: Report;
@@ -38,20 +39,11 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto bg-white print:p-2">
-      {/* Header with time and title */}
-      <div className="flex justify-between items-center mb-6 text-sm text-gray-600">
-        <div>{format(now, "h:mm:ss, p")}</div>
-        <div>Medical Report - v2</div>
-      </div>
-      
       {/* Logo and title section */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <div className="h-16 w-16 bg-blue-500 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 7h-6l-1-7z" />
-            </svg>
+            <Microscope className="h-10 w-10 text-white" />
           </div>
         </div>
         <div className="text-center flex-1">
@@ -69,16 +61,17 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
       {/* Colored bar */}
       <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-6"></div>
       
-      {/* Patient Information */}
-      <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-8">
+      {/* Patient Information - Using 2-column grid layout like in the image */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-4 mb-8">
         <div className="flex">
           <div className="w-32 font-semibold">Patient Name:</div>
           <div>{patient.fullName}</div>
         </div>
         <div className="flex">
           <div className="w-32 font-semibold">Date:</div>
-          <div>{format(new Date(report.date), "dd MMMM yyyy")}</div>
+          <div>{format(new Date(report.date), "d MMMM yyyy")}</div>
         </div>
+        
         <div className="flex">
           <div className="w-32 font-semibold">Patient ID:</div>
           <div>{patient.id.replace('p', '')}</div>
@@ -87,6 +80,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
           <div className="w-32 font-semibold">Gender:</div>
           <div>{patient.sex}</div>
         </div>
+        
         <div className="flex">
           <div className="w-32 font-semibold">Doctor:</div>
           <div>Dr. Not Specified</div>
@@ -97,7 +91,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         </div>
       </div>
       
-      {/* Results Table */}
+      {/* Results Table - Styled to match the image */}
       <table className="w-full border-collapse mb-8">
         <thead className="bg-gray-100">
           <tr>
@@ -115,18 +109,19 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
                   {category}
                 </td>
               </tr>
-              {results.map((result, index) => (
-                <tr key={`result-${index}`}>
-                  <td className="border px-4 py-2">{result.parameter}</td>
-                  <td className={`border px-4 py-2 ${
-                    result.value > result.referenceRange?.replace(/[<>]/g, '') ? 'text-red-500' : ''
-                  }`}>
-                    {result.value}
-                  </td>
-                  <td className="border px-4 py-2">{result.referenceRange}</td>
-                  <td className="border px-4 py-2">{result.unit}</td>
-                </tr>
-              ))}
+              {results.map((result, index) => {
+                const isAbnormal = result.value > result.referenceRange?.replace(/[<>]/g, '');
+                return (
+                  <tr key={`result-${index}`}>
+                    <td className="border px-4 py-2">{result.parameter}</td>
+                    <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500' : ''}`}>
+                      {result.value}
+                    </td>
+                    <td className="border px-4 py-2">{result.referenceRange}</td>
+                    <td className="border px-4 py-2">{result.unit}</td>
+                  </tr>
+                );
+              })}
             </>
           ))}
         </tbody>
@@ -135,20 +130,15 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
       {/* Bottom Colored bar */}
       <div className="h-1 w-full bg-gradient-to-r from-red-600 via-blue-600 to-green-600 mb-6"></div>
       
-      {/* Footer */}
+      {/* Footer - Center aligned with blue NVR text */}
       <div className="text-center mb-8">
-        <div className="font-bold text-blue-600">NVR DIAGNOSTICS</div>
+        <div className="font-bold text-blue-600 text-xl">NVR DIAGNOSTICS</div>
         <div className="text-sm text-gray-600">Santharam Hospital, Dowlaiswaram, Rajamahendravaram - 7780377630</div>
       </div>
       
+      {/* Printed timestamp - right aligned */}
       <div className="flex justify-end text-xs text-gray-500">
         <div>Printed on: {dateString} {timeString}</div>
-      </div>
-      
-      {/* Page number */}
-      <div className="mt-16 flex justify-between text-xs text-gray-500">
-        <div>about:blank</div>
-        <div>1/1</div>
       </div>
     </div>
   );
