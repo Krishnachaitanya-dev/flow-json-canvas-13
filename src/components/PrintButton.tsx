@@ -37,6 +37,7 @@ export const PrintButton = ({
         body {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          background: white !important;
         }
         .print-hidden {
           display: none !important;
@@ -48,20 +49,45 @@ export const PrintButton = ({
           padding: 0 !important;
           position: relative !important;
           overflow: visible !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        [role="dialog"] {
+          position: absolute !important;
+          inset: 0 !important;
+          display: block !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          background: white !important;
+          overflow: visible !important;
+          max-height: none !important;
+        }
+        [data-radix-popper-content-wrapper] {
+          position: static !important;
+          transform: none !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
         }
         .DialogContent {
           max-width: 100% !important;
-          max-height: 100% !important;
           width: 100% !important;
           padding: 0 !important;
           margin: 0 !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
+          position: static !important;
           transform: none !important;
+          box-shadow: none !important;
+          border: none !important;
         }
       `;
       document.head.appendChild(styleElement);
+      
+      // Force layout recalculation before printing
+      document.body.style.visibility = 'hidden';
+      setTimeout(() => {
+        document.body.style.visibility = 'visible';
+      }, 50);
     };
     
     const afterPrint = () => {
@@ -90,6 +116,12 @@ export const PrintButton = ({
       onClick();
     }
     
+    // Remove any existing print styles before adding new ones
+    const existingPrintStyles = document.getElementById('print-styles');
+    if (existingPrintStyles) {
+      existingPrintStyles.remove();
+    }
+    
     // Force any current UI updates to complete
     setTimeout(() => {
       // Take a snapshot of the current document state before printing
@@ -100,6 +132,15 @@ export const PrintButton = ({
         (printContent as HTMLElement).style.width = '100%';
         (printContent as HTMLElement).style.maxWidth = '100%';
         (printContent as HTMLElement).style.overflow = 'visible';
+        
+        // Force the dialog to be positioned properly
+        const dialog = document.querySelector('[role="dialog"]');
+        if (dialog) {
+          (dialog as HTMLElement).style.position = 'static';
+          (dialog as HTMLElement).style.transform = 'none';
+          (dialog as HTMLElement).style.margin = '0';
+          (dialog as HTMLElement).style.padding = '0';
+        }
       }
       
       // Trigger the print dialog
