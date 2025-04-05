@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
@@ -451,6 +450,10 @@ const Reports = () => {
           
           {currentReport && (
             <div className="print-container">
+              <div className="print-only-warning bg-yellow-100 p-4 mb-4 rounded border border-yellow-400 print-hidden">
+                <p className="font-semibold">Important: Do not duplicate any section. Merge all data into a single, error-free report.</p>
+              </div>
+              
               <ReportPrintView
                 report={currentReport}
                 patient={labData.patients.find(p => p.id === currentReport.patientId)!}

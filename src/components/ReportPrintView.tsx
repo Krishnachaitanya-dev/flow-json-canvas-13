@@ -22,9 +22,6 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
     // Group by categories if available
     const categories: Record<string, any[]> = {};
     
-    // For now, just assume Biochemistry category for demonstration
-    categories["Biochemistry"] = [];
-    
     if (test.name === "Lipid Profile") {
       categories["Lipid Profile"] = report.results;
     } else {
@@ -38,7 +35,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="print-page p-8 max-w-4xl mx-auto bg-white print:p-0">
+    <div className="print-page-content max-w-4xl mx-auto bg-white">
       {/* Logo and title section */}
       <div className="print-header flex justify-between items-center mb-6">
         <div className="flex items-center">
