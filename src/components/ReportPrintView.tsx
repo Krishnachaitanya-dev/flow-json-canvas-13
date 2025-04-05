@@ -120,66 +120,90 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         </div>
       </div>
       
-      {/* Results Table */}
-      <table className="w-full border-collapse mb-6">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border px-4 py-2 text-left">Test Name</th>
-            <th className="border px-4 py-2 text-left">Result</th>
-            <th className="border px-4 py-2 text-left">Reference Range</th>
-            <th className="border px-4 py-2 text-left">Unit</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(resultCategories).map(([category, results], catIndex) => (
-            <React.Fragment key={`category-${catIndex}`}>
-              <tr>
-                <td colSpan={4} className="border px-4 py-2 bg-gray-50 font-medium">
-                  {category}
-                </td>
-              </tr>
-              {results.map((result, index) => {
-                // Check if result is outside reference range
-                const isAbnormal = (() => {
-                  if (!result.referenceRange) return false;
+      {/* Results Section - Either Table (for Numeric) or Positive/Negative Result */}
+      {test.resultType === "Positive/Negative" ? (
+        // Positive/Negative Result Display
+        <div className="bg-white shadow-sm border border-gray-200 rounded-md p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">{test.name} Result</h2>
+          <div className="flex items-center justify-center p-6">
+            <div className={`text-2xl font-bold ${
+              report.positiveNegativeResult === "Positive" 
+                ? "text-red-600" 
+                : report.positiveNegativeResult === "Negative"
+                  ? "text-green-600" 
+                  : "text-gray-600"
+            }`}>
+              {report.positiveNegativeResult || "Pending"}
+            </div>
+          </div>
+          {test.description && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">{test.description}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Numeric Results Table
+        <table className="w-full border-collapse mb-6">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-4 py-2 text-left">Test Name</th>
+              <th className="border px-4 py-2 text-left">Result</th>
+              <th className="border px-4 py-2 text-left">Reference Range</th>
+              <th className="border px-4 py-2 text-left">Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(resultCategories).map(([category, results], catIndex) => (
+              <React.Fragment key={`category-${catIndex}`}>
+                <tr>
+                  <td colSpan={4} className="border px-4 py-2 bg-gray-50 font-medium">
+                    {category}
+                  </td>
+                </tr>
+                {results.map((result, index) => {
+                  // Check if result is outside reference range
+                  const isAbnormal = (() => {
+                    if (!result.referenceRange) return false;
+                    
+                    // Extract numbers from the reference range
+                    const rangeMatch = result.referenceRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                    if (rangeMatch) {
+                      const min = parseFloat(rangeMatch[1]);
+                      const max = parseFloat(rangeMatch[2]);
+                      return parseFloat(result.value) < min || parseFloat(result.value) > max;
+                    }
+                    
+                    // Handle ranges with < or > symbols
+                    if (result.referenceRange.includes('<')) {
+                      const maxVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                      return parseFloat(result.value) >= maxVal;
+                    }
+                    
+                    if (result.referenceRange.includes('>')) {
+                      const minVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                      return parseFloat(result.value) <= minVal;
+                    }
+                    
+                    return false;
+                  })();
                   
-                  // Extract numbers from the reference range
-                  const rangeMatch = result.referenceRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
-                  if (rangeMatch) {
-                    const min = parseFloat(rangeMatch[1]);
-                    const max = parseFloat(rangeMatch[2]);
-                    return parseFloat(result.value) < min || parseFloat(result.value) > max;
-                  }
-                  
-                  // Handle ranges with < or > symbols
-                  if (result.referenceRange.includes('<')) {
-                    const maxVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
-                    return parseFloat(result.value) >= maxVal;
-                  }
-                  
-                  if (result.referenceRange.includes('>')) {
-                    const minVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
-                    return parseFloat(result.value) <= minVal;
-                  }
-                  
-                  return false;
-                })();
-                
-                return (
-                  <tr key={`result-${index}`}>
-                    <td className="border px-4 py-2">{result.parameter}</td>
-                    <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500 font-medium' : ''}`}>
-                      {result.value}
-                    </td>
-                    <td className="border px-4 py-2">{result.referenceRange}</td>
-                    <td className="border px-4 py-2">{result.unit}</td>
-                  </tr>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
+                  return (
+                    <tr key={`result-${index}`}>
+                      <td className="border px-4 py-2">{result.parameter}</td>
+                      <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500 font-medium' : ''}`}>
+                        {result.value}
+                      </td>
+                      <td className="border px-4 py-2">{result.referenceRange}</td>
+                      <td className="border px-4 py-2">{result.unit}</td>
+                    </tr>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      )}
       
       {/* Always show footer */}
       <ReportFooter dateString={dateString} timeString={timeString} />

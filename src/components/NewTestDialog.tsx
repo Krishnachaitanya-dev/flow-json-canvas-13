@@ -52,10 +52,25 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    setTestData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === "resultType") {
+      // Ensure we only set valid TestResultType values
+      const typedValue = value as TestResultType;
+      
+      setTestData(prev => ({
+        ...prev,
+        [name]: typedValue
+      }));
+      
+      // If switching to Positive/Negative, clear parameters
+      if (typedValue === "Positive/Negative") {
+        setParameters([]);
+      }
+    } else {
+      setTestData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
   
   const handleParameterInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +117,7 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
         code: testData.code,
         description: testData.description,
         instructions: testData.instructions,
-        resultType: testData.resultType as TestResultType
+        resultType: testData.resultType
       });
       
       // Reset form

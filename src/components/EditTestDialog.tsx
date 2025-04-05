@@ -42,7 +42,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     parameters: [],
     price: 0,
     code: "",
-    resultType: "Numeric"
+    resultType: "Numeric" as TestResultType
   });
   
   const [newParameter, setNewParameter] = useState<Parameter>({
@@ -95,18 +95,21 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
   
   const handleSelectChange = (name: string, value: string) => {
     if (name === "resultType") {
+      // Only set resultType as Numeric or Positive/Negative (enforcing the TypeScript type)
+      const typedValue = value as TestResultType;
+      
       // If switching to Positive/Negative, clear parameters
-      if (value === "Positive/Negative") {
+      if (typedValue === "Positive/Negative") {
         setTestData(prev => ({
           ...prev,
-          [name]: value,
+          resultType: typedValue,
           parameters: [],
           parameterCount: 0
         }));
       } else {
         setTestData(prev => ({
           ...prev,
-          [name]: value
+          resultType: typedValue
         }));
       }
     } else {
