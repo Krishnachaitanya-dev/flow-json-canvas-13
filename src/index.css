@@ -91,7 +91,7 @@
     visibility: visible;
   }
   
-  .no-print {
+  .print-hidden {
     display: none !important;
   }
   
@@ -100,35 +100,64 @@
     left: 0;
     top: 0;
     width: 100%;
+    height: auto;
   }
   
   @page {
-    size: A4;
+    size: portrait;
     margin: 10mm;
   }
 }
 
-/* Print styles for full report view */
+/* Print styles for report view */
 @media print {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
   dialog {
-    padding: 0 !important;
-    background: none !important;
+    all: unset;
+    background: white !important;
     border: none !important;
     box-shadow: none !important;
-    visibility: visible;
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     overflow: visible;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   
   dialog > * {
     visibility: visible;
   }
+
+  dialog .print-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
   
   .print-hidden {
     display: none !important;
   }
+  
+  /* Hide dialog overlay */
+  div[data-state="open"][data-radix-dialog-overlay],
+  div[data-state="open"][data-radix-dialog-content] {
+    position: absolute !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+  
+  /* Hide dialog background */
+  [data-radix-popper-content-wrapper] {
+    transform: none !important;
+  }
 }
-

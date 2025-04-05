@@ -37,7 +37,7 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
   const resultCategories = getResultsByCategory();
 
   return (
-    <div className="p-8 max-w-4xl mx-auto bg-white print:p-0 print:max-w-none">
+    <div className="p-8 max-w-4xl mx-auto bg-white print:p-2">
       {/* Header with time and title */}
       <div className="flex justify-between items-center mb-6 text-sm text-gray-600">
         <div>{format(now, "h:mm:ss, p")}</div>

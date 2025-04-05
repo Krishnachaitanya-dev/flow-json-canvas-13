@@ -15,7 +15,7 @@ export const PrintButton = ({
   variant = "outline", 
   size = "icon",
   title = "Print",
-  className = "no-print"
+  className = "print-hidden"
 }: PrintButtonProps) => {
   const handlePrint = () => {
     // Execute the onClick handler if provided
