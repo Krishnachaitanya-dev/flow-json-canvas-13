@@ -15,7 +15,6 @@ import Invoices from "./pages/Invoices";
 import PatientDetail from "./pages/PatientDetail";
 import RegisterPatient from "./pages/RegisterPatient";
 import CompactRegisterPatient from "./pages/CompactRegisterPatient";
-import FlowCanvas from "./pages/FlowCanvas";
 import PrivateRoute from "./components/PrivateRoute";
 import NotFound from "./pages/NotFound";
 
@@ -78,12 +77,6 @@ const App = () => (
               <Route path="/invoices" element={
                 <PrivateRoute>
                   <Invoices />
-                </PrivateRoute>
-              } />
-              
-              <Route path="/flow-canvas" element={
-                <PrivateRoute>
-                  <FlowCanvas />
                 </PrivateRoute>
               } />
               
