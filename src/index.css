@@ -81,13 +81,13 @@
   }
 }
 
-/* Print Styles - Completely refactored for reliability */
+/* Print Styles - Enhanced for exact matching between preview and print */
 @media print {
-  /* Existing print styles */
+  /* Page setup */
   @page {
     size: portrait;
     margin: 10mm;
-    margin-top: 5mm; /* Slightly reduced top margin to minimize unnecessary space */
+    margin-top: 5mm; 
   }
   
   html, body {
@@ -112,16 +112,13 @@
   .print-page-content {
     visibility: visible !important;
     display: block !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
+    position: static !important; /* Changed from absolute to static */
     width: 100% !important;
     height: auto !important;
     overflow: visible !important;
     background-color: white !important;
     color: black !important;
     z-index: 9999 !important;
-    page-break-inside: avoid !important; /* Prevent page breaks within the container */
   }
   
   /* Show all elements within print containers */
@@ -131,17 +128,11 @@
     display: revert !important;
     overflow: visible !important;
     color: inherit !important;
-    page-break-inside: avoid !important; /* Prevent page breaks within elements */
-  }
-  
-  /* Ensure no extra blank pages */
-  @page {
-    size: auto;
-    margin: 5mm;
   }
   
   /* Hide UI elements that shouldn't appear in print */
-  .print-hidden {
+  .print-hidden,
+  button:not(.print-show) {
     display: none !important;
     visibility: hidden !important;
   }
@@ -149,6 +140,9 @@
   /* Handle images in print */
   img {
     max-width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .print-header {
@@ -183,11 +177,41 @@
     display: table-header-group !important;
   }
   
+  /* Preserve all tables */
+  table, tr, td, th, thead, tbody {
+    break-inside: avoid !important;
+  }
+  
+  /* Preserve colors in print */
+  .bg-gray-50,
+  .bg-gray-100 {
+    background-color: #f9fafb !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Preserve text colors in print */
+  .text-red-500 {
+    color: #ef4444 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Gradient coloring for header/footer bars */
+  .bg-gradient-to-r {
+    background: linear-gradient(to right, #dc2626, #2563eb, #22c55e) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
   /* Dialog print styles */
   [role="dialog"],
   dialog,
   [data-radix-dialog-content] {
-    position: static !important;
+    position: absolute !important; 
     max-height: none !important;
     max-width: none !important;
     border: none !important;
@@ -196,13 +220,13 @@
     transform: none !important;
   }
   
-  /* Basic layout utilities for print */
-  .flex { display: flex !important; }
-  .items-center { align-items: center !important; }
-  .justify-between { justify-content: space-between !important; }
-  
   /* Hide dialog overlays */
   [data-radix-dialog-overlay] {
     display: none !important;
+  }
+  
+  /* Special margins for no-header mode */
+  .print-page-content[class*="pt-16"] {
+    padding-top: 3cm !important; /* Add top margin for pre-printed paper */
   }
 }

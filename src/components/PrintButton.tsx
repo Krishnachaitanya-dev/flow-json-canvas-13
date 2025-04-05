@@ -25,11 +25,26 @@ export const PrintButton = ({
     const beforePrint = () => {
       setIsPrinting(true);
       document.body.classList.add('is-printing');
+      
+      // Apply any additional styles needed right before printing
+      const printContent = document.querySelector('.print-page-content');
+      if (printContent) {
+        // Store original class list to restore after printing
+        const originalClassName = printContent.className;
+        (printContent as any)._originalClassName = originalClassName;
+      }
     };
     
     const afterPrint = () => {
       setIsPrinting(false);
       document.body.classList.remove('is-printing');
+      
+      // Restore any styles changed before printing
+      const printContent = document.querySelector('.print-page-content');
+      if (printContent && (printContent as any)._originalClassName) {
+        printContent.className = (printContent as any)._originalClassName;
+        delete (printContent as any)._originalClassName;
+      }
     };
 
     window.addEventListener('beforeprint', beforePrint);
@@ -47,10 +62,19 @@ export const PrintButton = ({
       onClick();
     }
     
-    // Trigger the print dialog after a small delay to ensure content is ready
+    // Force any current UI updates to complete
     setTimeout(() => {
+      // Take a snapshot of the current document state before printing
+      const printContent = document.querySelector('.print-page-content');
+      if (printContent) {
+        // Set the content to be positioned correctly for printing
+        (printContent as HTMLElement).style.position = 'static';
+        (printContent as HTMLElement).style.width = '100%';
+      }
+      
+      // Trigger the print dialog
       window.print();
-    }, 100);
+    }, 200);
   };
 
   return (

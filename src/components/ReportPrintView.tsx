@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { Report, Patient, Test } from "@/context/LabContext";
 import { Microscope } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -78,6 +77,8 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
     
     if (test.name === "Lipid Profile") {
       categories["Lipid Profile"] = report.results;
+    } else if (test.name === "Complete Blood Count" || test.name === "CBC") {
+      categories["Complete Blood Count (CBC)"] = report.results;
     } else {
       // Put all results under test name category
       categories[test.name] = report.results;
@@ -99,12 +100,12 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         <Label htmlFor="header-footer-toggle">Show header/footer</Label>
       </div>
     
-      <div className="print-page-content p-6">
-        {/* Header section with logo and title */}
+      <div className={`print-page-content p-6 ${!showHeaderFooter ? 'pt-16' : ''}`}>
+        {/* Header section with logo and title - only shown if toggle is on */}
         {showHeaderFooter && <ReportHeader />}
         
         {/* Patient Information - Two column layout matching the image */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+        <div className={`grid grid-cols-2 gap-x-4 gap-y-2 mb-6 ${!showHeaderFooter ? 'mt-10' : ''}`}>
           <div className="flex">
             <div className="w-36 font-semibold">Patient Name:</div>
             <div>{patient.fullName}</div>
@@ -133,8 +134,8 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
           </div>
         </div>
         
-        {/* Results Table - Matching the image layout */}
-        <table className="w-full border-collapse mb-4">
+        {/* Results Table */}
+        <table className="w-full border-collapse mb-6">
           <thead className="bg-gray-100">
             <tr>
               <th className="border px-4 py-2 text-left">Test Name</th>
@@ -145,18 +146,43 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
           </thead>
           <tbody>
             {Object.entries(resultCategories).map(([category, results], catIndex) => (
-              <>
-                <tr key={`category-${catIndex}`}>
+              <React.Fragment key={`category-${catIndex}`}>
+                <tr>
                   <td colSpan={4} className="border px-4 py-2 bg-gray-50 font-medium">
                     {category}
                   </td>
                 </tr>
                 {results.map((result, index) => {
-                  const isAbnormal = result.value > result.referenceRange?.replace(/[<>]/g, '');
+                  // Check if result is outside reference range
+                  const isAbnormal = (() => {
+                    if (!result.referenceRange) return false;
+                    
+                    // Extract numbers from the reference range
+                    const rangeMatch = result.referenceRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+                    if (rangeMatch) {
+                      const min = parseFloat(rangeMatch[1]);
+                      const max = parseFloat(rangeMatch[2]);
+                      return parseFloat(result.value) < min || parseFloat(result.value) > max;
+                    }
+                    
+                    // Handle ranges with < or > symbols
+                    if (result.referenceRange.includes('<')) {
+                      const maxVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                      return parseFloat(result.value) >= maxVal;
+                    }
+                    
+                    if (result.referenceRange.includes('>')) {
+                      const minVal = parseFloat(result.referenceRange.replace(/[^0-9.]/g, ''));
+                      return parseFloat(result.value) <= minVal;
+                    }
+                    
+                    return false;
+                  })();
+                  
                   return (
                     <tr key={`result-${index}`}>
                       <td className="border px-4 py-2">{result.parameter}</td>
-                      <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500' : ''}`}>
+                      <td className={`border px-4 py-2 ${isAbnormal ? 'text-red-500 font-medium' : ''}`}>
                         {result.value}
                       </td>
                       <td className="border px-4 py-2">{result.referenceRange}</td>
@@ -164,12 +190,12 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
                     </tr>
                   );
                 })}
-              </>
+              </React.Fragment>
             ))}
           </tbody>
         </table>
         
-        {/* Footer with colored bar and timestamp */}
+        {/* Footer with colored bar and timestamp - only shown if toggle is on */}
         {showHeaderFooter && <ReportFooter dateString={dateString} timeString={timeString} />}
       </div>
     </>
