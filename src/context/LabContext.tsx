@@ -7,6 +7,7 @@ export type Sex = 'Male' | 'Female' | 'Other';
 export type PaymentMode = 'Cash' | 'Card' | 'UPI' | 'Insurance';
 export type ReportStatus = 'Pending' | 'Completed';
 export type PaymentStatus = 'Paid' | 'Pending';
+export type TestResultType = 'Numeric' | 'Positive/Negative';
 
 export interface Patient {
   id: string;
@@ -30,6 +31,7 @@ export interface Test {
   code: string;
   description?: string;
   instructions?: string;
+  resultType?: TestResultType;
 }
 
 export interface Report {
@@ -44,6 +46,7 @@ export interface Report {
     referenceRange: string;
     unit: string;
   }[];
+  positiveNegativeResult?: 'Positive' | 'Negative' | null;
 }
 
 export interface Invoice {
@@ -70,6 +73,7 @@ export interface LabData {
   tests: Test[];
   reports: Report[];
   invoices: Invoice[];
+  categories: string[];
 }
 
 // Initial data for the application
@@ -278,6 +282,7 @@ const initialLabData: LabData = {
       status: 'Pending',
     },
   ],
+  categories: ['Hematology', 'Biochemistry', 'Microbiology', 'Immunology', 'Endocrinology', 'Pathology']
 };
 
 // Context type
@@ -297,6 +302,7 @@ interface LabContextType {
   deleteInvoice: (id: string) => void;
   exportData: () => void;
   importData: (jsonData: string) => void;
+  addCategory: (category: string) => void;
 }
 
 // Create context
@@ -317,6 +323,16 @@ export const LabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Generate unique ID
   const generateId = (prefix: string): string => {
     return `${prefix}${new Date().getTime()}`;
+  };
+
+  // Category functions
+  const addCategory = (category: string) => {
+    if (!labData.categories.includes(category)) {
+      setLabData(prev => ({
+        ...prev,
+        categories: [...prev.categories, category]
+      }));
+    }
   };
 
   // Patient functions
@@ -479,6 +495,11 @@ export const LabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         throw new Error("Invalid data structure");
       }
       
+      // Ensure categories array exists
+      if (!parsedData.categories) {
+        parsedData.categories = [...new Set(parsedData.tests.map(test => test.category))];
+      }
+      
       setLabData(parsedData);
       toast.success("Data imported successfully");
     } catch (error) {
@@ -505,6 +526,7 @@ export const LabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteInvoice,
         exportData,
         importData,
+        addCategory,
       }}
     >
       {children}

@@ -13,7 +13,7 @@ interface AddCategoryDialogProps {
 }
 
 const AddCategoryDialog = ({ open, onOpenChange }: AddCategoryDialogProps) => {
-  const { labData } = useLab();
+  const { labData, addCategory } = useLab();
   const [categoryName, setCategoryName] = useState("");
   
   const handleAddCategory = () => {
@@ -30,12 +30,20 @@ const AddCategoryDialog = ({ open, onOpenChange }: AddCategoryDialogProps) => {
       return;
     }
     
-    // Category added successfully
-    toast.success(`Category "${categoryName}" added successfully`);
-    
-    // Reset form and close dialog
-    setCategoryName("");
-    onOpenChange(false);
+    try {
+      // Add the category using the context function
+      addCategory(categoryName);
+      
+      // Category added successfully
+      toast.success(`Category "${categoryName}" added successfully`);
+      
+      // Reset form and close dialog
+      setCategoryName("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
   };
   
   return (

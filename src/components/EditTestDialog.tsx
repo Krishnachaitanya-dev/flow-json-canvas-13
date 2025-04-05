@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Test, useLab } from "@/context/LabContext";
+import { Test, TestResultType, useLab } from "@/context/LabContext";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Define the Parameter interface for our internal use
 interface Parameter {
@@ -31,7 +32,7 @@ interface EditTestDialogProps {
 }
 
 const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogProps) => {
-  const { updateTest } = useLab();
+  const { updateTest, labData } = useLab();
   
   const [testData, setTestData] = useState<ExtendedTest>({
     id: "",
@@ -41,6 +42,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     parameters: [],
     price: 0,
     code: "",
+    resultType: "Numeric"
   });
   
   const [newParameter, setNewParameter] = useState<Parameter>({
@@ -52,30 +54,33 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
   // Initialize the form with test data when test changes
   useEffect(() => {
     if (test) {
-      // Initialize parameters based on test name
+      // Initialize parameters based on test name or just empty array for new resultType
       let initialParameters: Parameter[] = [];
       
-      if (test.name === "Complete Blood Count (CBC)" || test.name.includes("CBC")) {
-        initialParameters = [
-          { parameter: "Hemoglobin", unit: "g/dL", referenceRange: "13.5-17.5 (male), 12.0-15.5 (female)" },
-          { parameter: "Red Blood Cells", unit: "x10^6/μL", referenceRange: "4.5-5.9 (male), 4.0-5.2 (female)" },
-          { parameter: "White Blood Cells", unit: "x10^3/μL", referenceRange: "4.5-11.0" },
-          { parameter: "Platelets", unit: "x10^3/μL", referenceRange: "150-450" },
-          { parameter: "Hematocrit", unit: "%", referenceRange: "41-50 (male), 36-44 (female)" }
-        ];
-      } else if (test.name === "Lipid Profile") {
-        initialParameters = [
-          { parameter: "Total Cholesterol", unit: "mg/dL", referenceRange: "<200" },
-          { parameter: "HDL Cholesterol", unit: "mg/dL", referenceRange: ">40" },
-          { parameter: "LDL Cholesterol", unit: "mg/dL", referenceRange: "<100" },
-          { parameter: "Triglycerides", unit: "mg/dL", referenceRange: "<150" }
-        ];
+      if (test.resultType !== "Positive/Negative") {
+        if (test.name === "Complete Blood Count (CBC)" || test.name.includes("CBC")) {
+          initialParameters = [
+            { parameter: "Hemoglobin", unit: "g/dL", referenceRange: "13.5-17.5 (male), 12.0-15.5 (female)" },
+            { parameter: "Red Blood Cells", unit: "x10^6/μL", referenceRange: "4.5-5.9 (male), 4.0-5.2 (female)" },
+            { parameter: "White Blood Cells", unit: "x10^3/μL", referenceRange: "4.5-11.0" },
+            { parameter: "Platelets", unit: "x10^3/μL", referenceRange: "150-450" },
+            { parameter: "Hematocrit", unit: "%", referenceRange: "41-50 (male), 36-44 (female)" }
+          ];
+        } else if (test.name === "Lipid Profile") {
+          initialParameters = [
+            { parameter: "Total Cholesterol", unit: "mg/dL", referenceRange: "<200" },
+            { parameter: "HDL Cholesterol", unit: "mg/dL", referenceRange: ">40" },
+            { parameter: "LDL Cholesterol", unit: "mg/dL", referenceRange: "<100" },
+            { parameter: "Triglycerides", unit: "mg/dL", referenceRange: "<150" }
+          ];
+        }
       }
       
       setTestData({
         ...test,
         parameterCount: test.parameters, // Store the original numeric parameter count
         parameters: initialParameters, // Use our array of Parameter objects
+        resultType: test.resultType || "Numeric" // Default to Numeric if not specified
       });
     }
   }, [test]);
@@ -89,10 +94,27 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    setTestData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === "resultType") {
+      // If switching to Positive/Negative, clear parameters
+      if (value === "Positive/Negative") {
+        setTestData(prev => ({
+          ...prev,
+          [name]: value,
+          parameters: [],
+          parameterCount: 0
+        }));
+      } else {
+        setTestData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else {
+      setTestData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
   
   // Handle parameter input changes
@@ -159,7 +181,8 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
       price: testData.price,
       code: testData.code,
       description: testData.description,
-      instructions: testData.instructions
+      instructions: testData.instructions,
+      resultType: testData.resultType
     });
     
     toast.success("Test updated successfully");
@@ -212,12 +235,11 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Hematology">Hematology</SelectItem>
-                <SelectItem value="Biochemistry">Biochemistry</SelectItem>
-                <SelectItem value="Microbiology">Microbiology</SelectItem>
-                <SelectItem value="Immunology">Immunology</SelectItem>
-                <SelectItem value="Endocrinology">Endocrinology</SelectItem>
-                <SelectItem value="Pathology">Pathology</SelectItem>
+                {labData.categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -262,87 +284,109 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
           />
         </div>
         
-        <div className="space-y-3 mt-2">
-          <Label>Parameters</Label>
-          <div className="bg-white rounded-md border border-gray-200 p-4">
-            {testData.parameters.map((param, index) => (
-              <div key={index} className="flex mb-3 items-center gap-2">
-                <div className="w-1/3">
-                  <Input
-                    value={param.parameter}
-                    onChange={(e) => handleParameterChange(index, "parameter", e.target.value)}
-                    placeholder="Parameter name"
-                    className="bg-white border-gray-200"
-                  />
+        {/* Result Type Selection */}
+        <div className="space-y-3 mt-4">
+          <Label>Result Type</Label>
+          <RadioGroup 
+            value={testData.resultType} 
+            onValueChange={(value) => handleSelectChange("resultType", value)}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="Numeric" id="numeric-edit" />
+              <Label htmlFor="numeric-edit">Numeric Parameters</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="Positive/Negative" id="positive-negative-edit" />
+              <Label htmlFor="positive-negative-edit">Positive/Negative</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
+        {/* Parameters Section - Only show if Numeric is selected */}
+        {testData.resultType === "Numeric" && (
+          <div className="space-y-3 mt-4">
+            <Label>Parameters</Label>
+            <div className="bg-white rounded-md border border-gray-200 p-4">
+              {testData.parameters.map((param, index) => (
+                <div key={index} className="flex mb-3 items-center gap-2">
+                  <div className="w-1/3">
+                    <Input
+                      value={param.parameter}
+                      onChange={(e) => handleParameterChange(index, "parameter", e.target.value)}
+                      placeholder="Parameter name"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
+                  <div className="w-1/5">
+                    <Input
+                      value={param.unit}
+                      onChange={(e) => handleParameterChange(index, "unit", e.target.value)}
+                      placeholder="Unit (e.g., mg/dL)"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      value={param.referenceRange}
+                      onChange={(e) => handleParameterChange(index, "referenceRange", e.target.value)}
+                      placeholder="Reference range"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveParameter(index)}
+                    className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="w-1/5">
-                  <Input
-                    value={param.unit}
-                    onChange={(e) => handleParameterChange(index, "unit", e.target.value)}
-                    placeholder="Unit (e.g., mg/dL)"
-                    className="bg-white border-gray-200"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={param.referenceRange}
-                    onChange={(e) => handleParameterChange(index, "referenceRange", e.target.value)}
-                    placeholder="Reference range"
-                    className="bg-white border-gray-200"
-                  />
+              ))}
+              
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h4 className="text-sm font-medium mb-3">Add New Parameter</h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1/3">
+                    <Input
+                      value={newParameter.parameter}
+                      onChange={(e) => handleNewParameterChange("parameter", e.target.value)}
+                      placeholder="Parameter name"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
+                  <div className="w-1/5">
+                    <Input
+                      value={newParameter.unit}
+                      onChange={(e) => handleNewParameterChange("unit", e.target.value)}
+                      placeholder="Unit (e.g., mg/dL)"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      value={newParameter.referenceRange}
+                      onChange={(e) => handleNewParameterChange("referenceRange", e.target.value)}
+                      placeholder="Reference range"
+                      className="bg-white border-gray-200"
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveParameter(index)}
-                  className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  variant="outline"
+                  onClick={handleAddParameter}
+                  className="flex items-center gap-1 mt-2 w-full justify-center"
+                  disabled={newParameter.parameter.trim() === ""}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Plus className="h-4 w-4" /> Add Parameter
                 </Button>
               </div>
-            ))}
-            
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <h4 className="text-sm font-medium mb-3">Add New Parameter</h4>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-1/3">
-                  <Input
-                    value={newParameter.parameter}
-                    onChange={(e) => handleNewParameterChange("parameter", e.target.value)}
-                    placeholder="Parameter name"
-                    className="bg-white border-gray-200"
-                  />
-                </div>
-                <div className="w-1/5">
-                  <Input
-                    value={newParameter.unit}
-                    onChange={(e) => handleNewParameterChange("unit", e.target.value)}
-                    placeholder="Unit (e.g., mg/dL)"
-                    className="bg-white border-gray-200"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={newParameter.referenceRange}
-                    onChange={(e) => handleNewParameterChange("referenceRange", e.target.value)}
-                    placeholder="Reference range"
-                    className="bg-white border-gray-200"
-                  />
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddParameter}
-                className="flex items-center gap-1 mt-2 w-full justify-center"
-                disabled={newParameter.parameter.trim() === ""}
-              >
-                <Plus className="h-4 w-4" /> Add Parameter
-              </Button>
             </div>
           </div>
-        </div>
+        )}
         
         <DialogFooter className="gap-2 mt-4">
           <Button

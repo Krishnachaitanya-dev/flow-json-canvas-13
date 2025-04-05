@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { useLab, Test } from "@/context/LabContext";
@@ -19,9 +20,6 @@ const Tests = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newTestDialogOpen, setNewTestDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
-  
-  // Get unique categories from tests
-  const categories = ["All", ...new Set(labData.tests.map(test => test.category))];
   
   // Filter tests based on search and category
   useEffect(() => {
@@ -82,6 +80,12 @@ const Tests = () => {
     }
   };
 
+  const handleCopyTest = (test: Test) => {
+    navigator.clipboard.writeText(JSON.stringify(test, null, 2))
+      .then(() => toast.success("Test data copied to clipboard"))
+      .catch(() => toast.error("Failed to copy test data"));
+  };
+
   return (
     <Layout title="Tests">
       <div className="w-full">
@@ -123,7 +127,7 @@ const Tests = () => {
             >
               All
             </Button>
-            {categories.filter(cat => cat !== "All").map((category) => (
+            {labData.categories.map((category) => (
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
@@ -144,11 +148,19 @@ const Tests = () => {
                 <div className={`p-4 text-white ${getCategoryColor(test.category)}`}>
                   <div className="flex justify-between">
                     <h3 className="text-lg font-semibold">{test.name}</h3>
-                    <Copy className="h-4 w-4 cursor-pointer opacity-70 hover:opacity-100" />
+                    <Copy 
+                      className="h-4 w-4 cursor-pointer opacity-70 hover:opacity-100" 
+                      onClick={() => handleCopyTest(test)}
+                    />
                   </div>
                   <Badge className="mt-1 bg-white/20 text-white hover:bg-white/30">
                     {test.category}
                   </Badge>
+                  {test.resultType === "Positive/Negative" && (
+                    <Badge className="ml-2 mt-1 bg-emerald-500/80 text-white hover:bg-emerald-500/90">
+                      Positive/Negative
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="p-4 flex-1">
@@ -157,7 +169,11 @@ const Tests = () => {
                     <span className="font-semibold text-lg text-teal-600">₹{test.price.toFixed(2)}</span>
                   </div>
                   <div className="text-sm text-gray-500 mb-4">
-                    Parameters: {test.parameters}
+                    {test.resultType === "Positive/Negative" ? (
+                      "Result: Positive/Negative"
+                    ) : (
+                      `Parameters: ${test.parameters}`
+                    )}
                   </div>
                   
                   <div className="flex gap-2 mt-auto">

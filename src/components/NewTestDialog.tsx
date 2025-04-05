@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLab } from "@/context/LabContext";
+import { useLab, TestResultType } from "@/context/LabContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface NewTestDialogProps {
   open: boolean;
@@ -31,7 +32,8 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
     price: "",
     code: "",
     description: "",
-    instructions: ""
+    instructions: "",
+    resultType: "Numeric" as TestResultType
   });
   
   const [parameters, setParameters] = useState<TestParameter[]>([]);
@@ -40,8 +42,6 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
     unit: "",
     referenceRange: ""
   });
-  
-  const categories = [...new Set(labData.tests.map(test => test.category))];
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -67,8 +67,8 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
   };
   
   const addParameter = () => {
-    if (!newParameter.name || !newParameter.unit) {
-      toast.error("Parameter name and unit are required");
+    if (!newParameter.name) {
+      toast.error("Parameter name is required");
       return;
     }
     
@@ -90,15 +90,19 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
     }
     
     try {
+      // If it's a positive/negative test, no parameters are needed
+      const paramCount = testData.resultType === "Positive/Negative" ? 0 : parameters.length;
+      
       // Add the new test
       addTest({
         name: testData.name,
         category: testData.category,
-        parameters: parameters.length,
+        parameters: paramCount,
         price: parseFloat(testData.price) || 0,
         code: testData.code,
         description: testData.description,
-        instructions: testData.instructions
+        instructions: testData.instructions,
+        resultType: testData.resultType as TestResultType
       });
       
       // Reset form
@@ -108,7 +112,8 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
         price: "",
         code: "",
         description: "",
-        instructions: ""
+        instructions: "",
+        resultType: "Numeric"
       });
       setParameters([]);
       
@@ -174,7 +179,7 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {labData.categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
                     </SelectItem>
@@ -229,79 +234,100 @@ const NewTestDialog = ({ open, onOpenChange, onTestAdded }: NewTestDialogProps) 
             </div>
           </div>
           
-          {/* Parameters Section */}
-          <div className="border rounded-md p-4 bg-slate-50 mt-6">
-            <h3 className="text-base font-medium mb-4">Test Parameters</h3>
-            
-            {parameters.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {parameters.map((param, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-white p-2 rounded border">
-                    <div className="flex-1 flex items-center gap-2">
-                      <div className="w-1/3 text-sm font-medium">{param.name}</div>
-                      <div className="w-1/3 text-sm text-gray-600">{param.unit}</div>
-                      <div className="w-1/3 text-sm text-gray-600">{param.referenceRange}</div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-gray-500"
-                      onClick={() => removeParameter(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              <div>
-                <Label htmlFor="paramName" className="text-xs">Parameter Name</Label>
-                <Input
-                  id="paramName"
-                  name="name"
-                  value={newParameter.name}
-                  onChange={handleParameterInputChange}
-                  placeholder="e.g., Hemoglobin"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label htmlFor="paramUnit" className="text-xs">Unit</Label>
-                <Input
-                  id="paramUnit"
-                  name="unit"
-                  value={newParameter.unit}
-                  onChange={handleParameterInputChange}
-                  placeholder="e.g., g/dL"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label htmlFor="paramRange" className="text-xs">Reference Range</Label>
-                <Input
-                  id="paramRange"
-                  name="referenceRange"
-                  value={newParameter.referenceRange}
-                  onChange={handleParameterInputChange}
-                  placeholder="e.g., 12-16"
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
-            
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2 text-xs"
-              onClick={addParameter}
+          {/* Result Type Selection */}
+          <div className="border rounded-md p-4 bg-slate-50 mt-4 mb-4">
+            <Label className="text-sm font-medium mb-2 block">Result Type</Label>
+            <RadioGroup 
+              value={testData.resultType} 
+              onValueChange={(value) => handleSelectChange("resultType", value)}
+              className="flex space-x-4"
             >
-              <Plus className="h-3 w-3 mr-1" /> Add Parameter
-            </Button>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Numeric" id="numeric" />
+                <Label htmlFor="numeric">Numeric Parameters</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Positive/Negative" id="positive-negative" />
+                <Label htmlFor="positive-negative">Positive/Negative</Label>
+              </div>
+            </RadioGroup>
           </div>
+          
+          {/* Parameters Section - Only show if Numeric is selected */}
+          {testData.resultType === "Numeric" && (
+            <div className="border rounded-md p-4 bg-slate-50 mt-4">
+              <h3 className="text-base font-medium mb-4">Test Parameters</h3>
+              
+              {parameters.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {parameters.map((param, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-white p-2 rounded border">
+                      <div className="flex-1 flex items-center gap-2">
+                        <div className="w-1/3 text-sm font-medium">{param.name}</div>
+                        <div className="w-1/3 text-sm text-gray-600">{param.unit}</div>
+                        <div className="w-1/3 text-sm text-gray-600">{param.referenceRange}</div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-gray-500"
+                        onClick={() => removeParameter(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div>
+                  <Label htmlFor="paramName" className="text-xs">Parameter Name</Label>
+                  <Input
+                    id="paramName"
+                    name="name"
+                    value={newParameter.name}
+                    onChange={handleParameterInputChange}
+                    placeholder="e.g., Hemoglobin"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="paramUnit" className="text-xs">Unit</Label>
+                  <Input
+                    id="paramUnit"
+                    name="unit"
+                    value={newParameter.unit}
+                    onChange={handleParameterInputChange}
+                    placeholder="e.g., g/dL"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="paramRange" className="text-xs">Reference Range</Label>
+                  <Input
+                    id="paramRange"
+                    name="referenceRange"
+                    value={newParameter.referenceRange}
+                    onChange={handleParameterInputChange}
+                    placeholder="e.g., 12-16"
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 text-xs"
+                onClick={addParameter}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Add Parameter
+              </Button>
+            </div>
+          )}
         </div>
         
         <DialogFooter className="bg-slate-50 px-6 py-4 gap-2 sticky bottom-0 z-10">
