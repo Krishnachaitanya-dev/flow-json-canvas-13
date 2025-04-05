@@ -71,13 +71,11 @@ const RegisterPatient = () => {
   return (
     <Layout title="Register Patient">
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4">
           <form onSubmit={handleSubmit}>
-            <div className="space-y-8">
-              <h2 className="text-2xl font-semibold text-center">Patient Information</h2>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
                   <Label htmlFor="regDate">Reg. Date</Label>
                   <Input
                     id="regDate"
@@ -89,7 +87,7 @@ const RegisterPatient = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Slip No.</Label>
                   <Input
                     value="Auto-generated"
@@ -98,7 +96,7 @@ const RegisterPatient = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Patient ID</Label>
                   <div className="flex items-center">
                     <Select
@@ -121,7 +119,7 @@ const RegisterPatient = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="refBy">Ref. By</Label>
                   <Input
                     id="refBy"
@@ -134,8 +132,8 @@ const RegisterPatient = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
                   <Label htmlFor="title">Title</Label>
                   <Select
                     value={formData.title}
@@ -153,7 +151,7 @@ const RegisterPatient = () => {
                   </Select>
                 </div>
                 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-1 md:col-span-2">
                   <Label htmlFor="fullName">Full Name*</Label>
                   <Input
                     id="fullName"
@@ -166,7 +164,7 @@ const RegisterPatient = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="mobile">Mobile*</Label>
                   <Input
                     id="mobile"
@@ -180,8 +178,8 @@ const RegisterPatient = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1 md:col-span-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -194,7 +192,7 @@ const RegisterPatient = () => {
                   />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="age">Age</Label>
                   <div className="flex">
                     <Input
@@ -222,7 +220,7 @@ const RegisterPatient = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Sex</Label>
                   <RadioGroup
                     value={formData.sex}
@@ -245,7 +243,7 @@ const RegisterPatient = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="address">Address</Label>
                 <Textarea
                   id="address"
@@ -258,7 +256,7 @@ const RegisterPatient = () => {
                 />
               </div>
               
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"

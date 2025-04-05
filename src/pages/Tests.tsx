@@ -18,9 +18,10 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const Tests = () => {
-  const { labData, addTest, addReport, addInvoice } = useLab();
+  const { labData, addTest, addReport, addInvoice, updateTest } = useLab();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingTest, setIsAddingTest] = useState(false);
+  const [isEditingTest, setIsEditingTest] = useState(false);
   const [isAssigningTest, setIsAssigningTest] = useState(false);
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [newTest, setNewTest] = useState({
@@ -67,6 +68,30 @@ const Tests = () => {
       price: "",
       code: "",
     });
+  };
+
+  // Handle editing a test
+  const handleEditTest = () => {
+    if (!selectedTest.name || !selectedTest.category || !selectedTest.price || !selectedTest.code) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    updateTest({
+      ...selectedTest,
+      parameters: parseInt(selectedTest.parameters.toString()),
+      price: parseFloat(selectedTest.price.toString())
+    });
+    
+    setIsEditingTest(false);
+    setSelectedTest(null);
+    toast.success("Test updated successfully");
+  };
+
+  // Open edit dialog
+  const openEditDialog = (test) => {
+    setSelectedTest({...test});
+    setIsEditingTest(true);
   };
 
   // Handle assigning test to a patient
@@ -151,18 +176,28 @@ const Tests = () => {
                 <div className="text-lg font-semibold">
                   ₹{test.price.toFixed(2)}
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center"
-                  onClick={() => {
-                    setSelectedTest(test);
-                    setIsAssigningTest(true);
-                  }}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign to Patient
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => openEditDialog(test)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center"
+                    onClick={() => {
+                      setSelectedTest(test);
+                      setIsAssigningTest(true);
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -242,6 +277,80 @@ const Tests = () => {
             </Button>
             <Button onClick={handleAddTest}>
               Add Test
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Test Dialog */}
+      <Dialog open={isEditingTest} onOpenChange={setIsEditingTest}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Test</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            {selectedTest && (
+              <>
+                <div>
+                  <Label htmlFor="edit-name">Test Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={selectedTest.name}
+                    onChange={(e) => setSelectedTest({...selectedTest, name: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Input
+                    id="edit-category"
+                    value={selectedTest.category}
+                    onChange={(e) => setSelectedTest({...selectedTest, category: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-code">Test Code</Label>
+                  <Input
+                    id="edit-code"
+                    value={selectedTest.code}
+                    onChange={(e) => setSelectedTest({...selectedTest, code: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-parameters">Number of Parameters</Label>
+                  <Input
+                    id="edit-parameters"
+                    type="number"
+                    min="1"
+                    value={selectedTest.parameters}
+                    onChange={(e) => setSelectedTest({...selectedTest, parameters: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-price">Price (₹)</Label>
+                  <Input
+                    id="edit-price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={selectedTest.price}
+                    onChange={(e) => setSelectedTest({...selectedTest, price: e.target.value})}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingTest(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditTest}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

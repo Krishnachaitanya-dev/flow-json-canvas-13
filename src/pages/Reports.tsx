@@ -5,39 +5,47 @@ import { useLab } from "@/context/LabContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, FileText, Eye, Printer, CalendarIcon } from "lucide-react";
-import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import PrintButton from "@/components/PrintButton";
 import ReportPrintView from "@/components/ReportPrintView";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 const Reports = () => {
   const { labData } = useLab();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   
-  // Filter reports based on search query and date filter
+  // Date filter states
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterStartDate, setFilterStartDate] = useState<Date | undefined>(undefined);
+  const [filterEndDate, setFilterEndDate] = useState<Date | undefined>(undefined);
+  const [dateFilterType, setDateFilterType] = useState<"none" | "single" | "range">("none");
+  
+  // Filter reports based on search query and date filters
   const filteredReports = labData.reports.filter(report => {
     const query = searchQuery.toLowerCase();
     const patient = labData.patients.find(p => p.id === report.patientId);
     const test = labData.tests.find(t => t.id === report.testId);
+    const reportDate = parseISO(report.date);
     
     // Check text search
     const matchesText = 
-      patient?.fullName.toLowerCase().includes(query) ||
-      test?.name.toLowerCase().includes(query) ||
+      (patient?.fullName.toLowerCase().includes(query) ?? false) ||
+      (test?.name.toLowerCase().includes(query) ?? false) ||
       report.id.toLowerCase().includes(query);
     
     // Check date filter
     let matchesDate = true;
-    if (dateFilter) {
-      const reportDate = parseISO(report.date);
+    if (dateFilterType === "single" && filterDate) {
+      matchesDate = isSameDay(reportDate, filterDate);
+    } else if (dateFilterType === "range" && filterStartDate && filterEndDate) {
       matchesDate = isWithinInterval(reportDate, {
-        start: startOfDay(dateFilter),
-        end: endOfDay(dateFilter)
+        start: startOfDay(filterStartDate),
+        end: endOfDay(filterEndDate)
       });
     }
     
@@ -47,7 +55,10 @@ const Reports = () => {
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery("");
-    setDateFilter(undefined);
+    setDateFilterType("none");
+    setFilterDate(undefined);
+    setFilterStartDate(undefined);
+    setFilterEndDate(undefined);
   };
   
   // Get report details
@@ -78,33 +89,145 @@ const Reports = () => {
             />
           </div>
           
-          {/* Date picker */}
+          {/* Single date picker */}
           <Popover>
             <PopoverTrigger asChild>
               <Button 
-                variant="outline" 
+                variant={dateFilterType === "single" ? "default" : "outline"} 
                 className={cn(
-                  "w-full sm:w-[240px]",
-                  dateFilter ? "text-foreground" : "text-muted-foreground"
+                  "w-full sm:w-[180px]",
+                  dateFilterType === "single" ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                {filterDate ? format(filterDate, "PP") : "Single Date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
                 mode="single"
-                selected={dateFilter}
-                onSelect={setDateFilter}
+                selected={filterDate}
+                onSelect={(date) => {
+                  setFilterDate(date);
+                  if (date) {
+                    setDateFilterType("single");
+                  } else {
+                    setDateFilterType("none");
+                  }
+                }}
                 initialFocus
                 className="p-3 pointer-events-auto"
               />
+              <div className="p-3 border-t border-border flex justify-between">
+                <Button variant="ghost" size="sm" onClick={() => {
+                  setFilterDate(undefined);
+                  setDateFilterType("none");
+                }}>
+                  Clear
+                </Button>
+                <Button variant="default" size="sm" onClick={() => {
+                  if (filterDate) {
+                    setDateFilterType("single");
+                  }
+                }}>
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Date range picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={dateFilterType === "range" ? "default" : "outline"}
+                className={cn(
+                  "w-full sm:w-[180px]",
+                  dateFilterType === "range" ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilterType === "range" && filterStartDate && filterEndDate 
+                  ? `${format(filterStartDate, "dd/MM")} - ${format(filterEndDate, "dd/MM")}`
+                  : "Date Range"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <div className="p-3 border-b border-border">
+                <div className="grid gap-2">
+                  <Label>From</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterStartDate ? format(filterStartDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterStartDate}
+                        onSelect={setFilterStartDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid gap-2 mt-2">
+                  <Label>To</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-start text-left"
+                      >
+                        {filterEndDate ? format(filterEndDate, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterEndDate}
+                        onSelect={setFilterEndDate}
+                        disabled={(date) => 
+                          filterStartDate ? date < filterStartDate : false
+                        }
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex justify-between mt-4">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setFilterStartDate(undefined);
+                    setFilterEndDate(undefined);
+                    setDateFilterType("none");
+                  }}>
+                    Clear
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => {
+                      if (filterStartDate && filterEndDate) {
+                        setDateFilterType("range");
+                      }
+                    }}
+                    disabled={!filterStartDate || !filterEndDate}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
             </PopoverContent>
           </Popover>
 
           {/* Clear filters button */}
-          {(searchQuery || dateFilter) && (
+          {(searchQuery || dateFilterType !== "none") && (
             <Button 
               variant="ghost" 
               onClick={clearFilters} 
@@ -159,7 +282,7 @@ const Reports = () => {
         
         {filteredReports.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {searchQuery || dateFilter
+            {(searchQuery || dateFilterType !== "none")
               ? "No reports match your search criteria" 
               : "No reports found."
             }
