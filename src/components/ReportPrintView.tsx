@@ -100,37 +100,38 @@ const ReportPrintView = ({ report, patient, test }: ReportPrintViewProps) => {
         <Label htmlFor="header-footer-toggle">Show header/footer</Label>
       </div>
     
-      <div className={`print-page-content p-6 ${!showHeaderFooter ? 'pt-16' : ''}`}>
+      {/* Reduced top margin by 50% with mt-5 instead of mt-10 when no header */}
+      <div className={`print-page-content p-6 ${!showHeaderFooter ? 'pt-8' : ''}`}>
         {/* Header section with logo and title - only shown if toggle is on */}
         {showHeaderFooter && <ReportHeader />}
         
-        {/* Patient Information - Two column layout matching the image */}
-        <div className={`grid grid-cols-2 gap-x-4 gap-y-2 mb-6 ${!showHeaderFooter ? 'mt-10' : ''}`}>
+        {/* Patient Information - Updated to have labels next to values in single row */}
+        <div className={`grid grid-cols-2 gap-x-4 gap-y-2 mb-6 ${!showHeaderFooter ? 'mt-5' : ''}`}>
           <div className="flex">
-            <div className="w-36 font-semibold">Patient Name:</div>
-            <div>{patient.fullName}</div>
+            <span className="font-semibold w-28">Patient Name:</span>
+            <span>{patient.fullName}</span>
           </div>
           <div className="flex">
-            <div className="w-36 font-semibold">Date:</div>
-            <div>{format(new Date(report.date), "d MMM yyyy")}</div>
-          </div>
-          
-          <div className="flex">
-            <div className="w-36 font-semibold">Patient ID:</div>
-            <div>{patient.id.replace('p', '')}</div>
-          </div>
-          <div className="flex">
-            <div className="w-36 font-semibold">Gender:</div>
-            <div>{patient.sex}</div>
+            <span className="font-semibold w-28">Date:</span>
+            <span>{format(new Date(report.date), "d MMM yyyy")}</span>
           </div>
           
           <div className="flex">
-            <div className="w-36 font-semibold">Doctor:</div>
-            <div>Dr. Not Specified</div>
+            <span className="font-semibold w-28">Patient ID:</span>
+            <span>{patient.id.replace('p', '')}</span>
           </div>
           <div className="flex">
-            <div className="w-36 font-semibold">Age:</div>
-            <div>{patient.age} years</div>
+            <span className="font-semibold w-28">Gender:</span>
+            <span>{patient.sex}</span>
+          </div>
+          
+          <div className="flex">
+            <span className="font-semibold w-28">Doctor:</span>
+            <span>Dr. Not Specified</span>
+          </div>
+          <div className="flex">
+            <span className="font-semibold w-28">Age:</span>
+            <span>{patient.age} years</span>
           </div>
         </div>
         
