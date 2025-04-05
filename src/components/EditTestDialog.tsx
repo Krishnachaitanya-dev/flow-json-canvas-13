@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { Test, useLab } from "@/context/LabContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 // Define the Parameter interface for our internal use
 interface Parameter {
@@ -144,7 +145,10 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
   };
   
   const handleSubmit = () => {
-    if (!testData.name || !testData.category || testData.price <= 0) return;
+    if (!testData.name || !testData.category || testData.price <= 0) {
+      toast.error("Please fill all required fields");
+      return;
+    }
     
     // Update the test with the new data, converting our ExtendedTest to Test format
     updateTest({
@@ -158,6 +162,8 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
       instructions: testData.instructions
     });
     
+    toast.success("Test updated successfully");
+    
     // Call the onUpdate callback if provided
     if (onUpdate) onUpdate();
     
@@ -167,7 +173,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-gray-50">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Edit Test</DialogTitle>
         </DialogHeader>
@@ -180,7 +186,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
               value={testData.code}
               placeholder="T001"
               readOnly
-              className="bg-gray-50"
+              className="bg-white border-gray-200"
             />
           </div>
           
@@ -192,7 +198,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
               value={testData.name}
               onChange={handleInputChange}
               placeholder="Complete Blood Count (CBC)"
-              className="bg-yellow-50 border-gray-200"
+              className="bg-white border-gray-200"
             />
           </div>
           
@@ -202,7 +208,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
               value={testData.category}
               onValueChange={(value) => handleSelectChange("category", value)}
             >
-              <SelectTrigger className="bg-yellow-50 border-gray-200">
+              <SelectTrigger className="bg-white border-gray-200">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -225,7 +231,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
               value={testData.price}
               onChange={handleInputChange}
               min={0}
-              className="bg-yellow-50 border-gray-200"
+              className="bg-white border-gray-200"
             />
           </div>
         </div>
@@ -238,7 +244,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
             placeholder="Evaluates overall health and detects a wide range of disorders."
             value={testData.description || ""}
             onChange={handleInputChange}
-            className="bg-yellow-50 border-gray-200"
+            className="bg-white border-gray-200"
             rows={3}
           />
         </div>
@@ -251,34 +257,40 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
             placeholder="Enter preparation instructions (optional)"
             value={testData.instructions || ""}
             onChange={handleInputChange}
-            className="bg-yellow-50 border-gray-200"
+            className="bg-white border-gray-200"
             rows={3}
           />
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-3 mt-2">
           <Label>Parameters</Label>
-          <div className="space-y-4 border rounded-md p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             {testData.parameters.map((param, index) => (
-              <div key={index} className="grid grid-cols-[1fr_150px_1fr_40px] gap-2 items-center">
-                <Input
-                  value={param.parameter}
-                  onChange={(e) => handleParameterChange(index, "parameter", e.target.value)}
-                  placeholder="Parameter name"
-                  className="bg-yellow-50 border-gray-200"
-                />
-                <Input
-                  value={param.unit}
-                  onChange={(e) => handleParameterChange(index, "unit", e.target.value)}
-                  placeholder="Unit (e.g., mg/dL)"
-                  className="bg-yellow-50 border-gray-200"
-                />
-                <Input
-                  value={param.referenceRange}
-                  onChange={(e) => handleParameterChange(index, "referenceRange", e.target.value)}
-                  placeholder="Reference range"
-                  className="bg-yellow-50 border-gray-200"
-                />
+              <div key={index} className="flex mb-3 items-center gap-2">
+                <div className="w-1/3">
+                  <Input
+                    value={param.parameter}
+                    onChange={(e) => handleParameterChange(index, "parameter", e.target.value)}
+                    placeholder="Parameter name"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
+                <div className="w-1/5">
+                  <Input
+                    value={param.unit}
+                    onChange={(e) => handleParameterChange(index, "unit", e.target.value)}
+                    placeholder="Unit (e.g., mg/dL)"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    value={param.referenceRange}
+                    onChange={(e) => handleParameterChange(index, "referenceRange", e.target.value)}
+                    placeholder="Reference range"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
@@ -291,53 +303,60 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
               </div>
             ))}
             
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Add New Parameter</h4>
-              <div className="grid grid-cols-[1fr_150px_1fr_auto] gap-2 items-center">
-                <Input
-                  value={newParameter.parameter}
-                  onChange={(e) => handleNewParameterChange("parameter", e.target.value)}
-                  placeholder="Parameter name"
-                  className="bg-yellow-50 border-gray-200"
-                />
-                <Input
-                  value={newParameter.unit}
-                  onChange={(e) => handleNewParameterChange("unit", e.target.value)}
-                  placeholder="Unit (e.g., mg/dL)"
-                  className="bg-yellow-50 border-gray-200"
-                />
-                <Input
-                  value={newParameter.referenceRange}
-                  onChange={(e) => handleNewParameterChange("referenceRange", e.target.value)}
-                  placeholder="Reference range"
-                  className="bg-yellow-50 border-gray-200"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddParameter}
-                  className="flex items-center gap-1"
-                  disabled={newParameter.parameter.trim() === ""}
-                >
-                  <Plus className="h-4 w-4" /> Add Parameter
-                </Button>
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <h4 className="text-sm font-medium mb-3">Add New Parameter</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1/3">
+                  <Input
+                    value={newParameter.parameter}
+                    onChange={(e) => handleNewParameterChange("parameter", e.target.value)}
+                    placeholder="Parameter name"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
+                <div className="w-1/5">
+                  <Input
+                    value={newParameter.unit}
+                    onChange={(e) => handleNewParameterChange("unit", e.target.value)}
+                    placeholder="Unit (e.g., mg/dL)"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    value={newParameter.referenceRange}
+                    onChange={(e) => handleNewParameterChange("referenceRange", e.target.value)}
+                    placeholder="Reference range"
+                    className="bg-white border-gray-200"
+                  />
+                </div>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddParameter}
+                className="flex items-center gap-1 mt-2 w-full justify-center"
+                disabled={newParameter.parameter.trim() === ""}
+              >
+                <Plus className="h-4 w-4" /> Add Parameter
+              </Button>
             </div>
           </div>
         </div>
         
-        <DialogFooter className="sm:justify-end gap-2 mt-4">
+        <DialogFooter className="gap-2 mt-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="bg-white"
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium"
+            className="bg-amber-500 hover:bg-amber-600 text-white"
           >
             Update Test
           </Button>
