@@ -411,7 +411,6 @@
 // };
 
 // export default EditTestDialog;
-
 import { useState, useEffect } from "react";
 import { Test, TestResultType, useLab } from "@/context/LabContext";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -506,7 +505,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     }));
   };
   
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = (name: string, value: TestResultType) => {
     if (name === "resultType") {
       // If switching to Positive/Negative, clear parameters
       if (value === TestResultType.PositiveNegative) {
@@ -702,7 +701,7 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
           <Label>Result Type</Label>
           <RadioGroup 
             value={testData.resultType} 
-            onValueChange={(value) => handleSelectChange("resultType", value)}
+            onValueChange={(value) => handleSelectChange("resultType", value as TestResultType)}
             className="flex space-x-4"
           >
             <div className="flex items-center space-x-2">
@@ -824,4 +823,3 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
 };
 
 export default EditTestDialog;
-
