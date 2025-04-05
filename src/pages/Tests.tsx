@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { useLab, Test } from "@/context/LabContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileEdit, Trash2, Search, Plus, Copy } from "lucide-react";
+import { FileEdit, Trash2, Search, Plus, Copy, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 import EditTestDialog from "@/components/EditTestDialog";
 import NewTestDialog from "@/components/NewTestDialog";
+import AddCategoryDialog from "@/components/AddCategoryDialog";
 
 const Tests = () => {
   const { labData, deleteTest } = useLab();
@@ -18,6 +18,7 @@ const Tests = () => {
   const [editingTest, setEditingTest] = useState<Test | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newTestDialogOpen, setNewTestDialogOpen] = useState(false);
+  const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   
   // Get unique categories from tests
   const categories = ["All", ...new Set(labData.tests.map(test => test.category))];
@@ -97,12 +98,20 @@ const Tests = () => {
                 className="pl-10 border-gray-200"
               />
             </div>
-            <Button 
-              onClick={() => setNewTestDialogOpen(true)}
-              className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Add Test
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setNewTestDialogOpen(true)}
+                className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" /> Add Test
+              </Button>
+              <Button 
+                onClick={() => setAddCategoryDialogOpen(true)}
+                className="bg-futuristic-purple hover:bg-futuristic-purple/90 text-white flex items-center gap-2"
+              >
+                <FolderPlus className="h-4 w-4" /> Add Category
+              </Button>
+            </div>
           </div>
           
           <div className="flex flex-wrap gap-2 mb-4">
@@ -216,6 +225,12 @@ const Tests = () => {
           setSearchQuery("");
           setSelectedCategory("All");
         }}
+      />
+      
+      {/* Add Category Dialog */}
+      <AddCategoryDialog
+        open={addCategoryDialogOpen}
+        onOpenChange={setAddCategoryDialogOpen}
       />
     </Layout>
   );
