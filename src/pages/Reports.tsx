@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
@@ -442,7 +443,7 @@ const Reports = () => {
           if (!open) setIsPrintView(false);
         }}
       >
-        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white print:max-h-none">
+        <DialogContent className="max-w-4xl print:p-0 print:border-0 print:shadow-none print:bg-white print:max-h-none print-dialog">
           <DialogHeader className="print-hidden">
             <DialogTitle>Lab Report</DialogTitle>
             <DialogDescription>Preview the report before printing.</DialogDescription>

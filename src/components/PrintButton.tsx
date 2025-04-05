@@ -22,11 +22,32 @@ export const PrintButton = ({
   
   // Handle beforeprint and afterprint events
   useEffect(() => {
-    const beforePrint = () => setIsPrinting(true);
+    const beforePrint = () => {
+      setIsPrinting(true);
+      // Add a class to body for print-specific styles
+      document.body.classList.add('is-printing');
+      
+      // Make sure only one print-container is visible
+      const containers = document.querySelectorAll('.print-container');
+      if (containers.length > 1) {
+        containers.forEach((container, index) => {
+          if (index > 0) {
+            (container as HTMLElement).style.display = 'none';
+          }
+        });
+      }
+    };
+    
     const afterPrint = () => {
       setIsPrinting(false);
       // Clean up any print-specific classes
       document.body.classList.remove('is-printing');
+      
+      // Restore any containers that were hidden
+      const containers = document.querySelectorAll('.print-container');
+      containers.forEach((container) => {
+        (container as HTMLElement).style.display = '';
+      });
     };
 
     window.addEventListener('beforeprint', beforePrint);
@@ -44,11 +65,21 @@ export const PrintButton = ({
       onClick();
     }
     
-    // Add print-specific class to body
-    document.body.classList.add('is-printing');
-    
     // Add a small delay to allow any UI updates to complete
     setTimeout(() => {
+      // Add print-specific class to body
+      document.body.classList.add('is-printing');
+      
+      // Make sure only one print-container is visible
+      const containers = document.querySelectorAll('.print-container');
+      if (containers.length > 1) {
+        containers.forEach((container, index) => {
+          if (index > 0) {
+            (container as HTMLElement).style.display = 'none';
+          }
+        });
+      }
+      
       window.print();
     }, 300);
   };
