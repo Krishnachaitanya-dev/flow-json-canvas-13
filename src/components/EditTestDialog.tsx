@@ -197,6 +197,9 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
     onOpenChange(false);
   };
 
+  // Filter out any empty categories
+  const validCategories = labData.categories.filter(category => category && category.trim() !== "");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-gray-50">
@@ -238,11 +241,14 @@ const EditTestDialog = ({ test, open, onOpenChange, onUpdate }: EditTestDialogPr
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {labData.categories.map((category) => (
+                {validCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
                 ))}
+                {validCategories.length === 0 && (
+                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
