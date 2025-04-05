@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useLab } from "@/context/LabContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileSpreadsheet as FileIcon, Receipt as ReceiptIcon, CheckCircle, TrendingUp, Activity, User } from "lucide-react";
+// import { Users, FileSpreadsheet as FileIcon, Receipt as ReceiptIcon, CheckCircle, TrendingUp, Activity, User } from "lucide-react";
 import { format } from "date-fns";
+import { Users, FileSpreadsheet as FileIcon, Receipt as ReceiptIcon, CheckCircle, TrendingUp, Activity, User, UserPlus } from "lucide-react";
 
 const Dashboard = () => {
   const { labData } = useLab();
