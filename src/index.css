@@ -1,78 +1,262 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
   * {
-    @apply antialiased;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-.futuristic-card-solid {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  box-shadow:
-    0 0 20px rgba(0, 0, 0, 0.1),
-    0 0 40px rgba(0, 0, 0, 0.05);
-}
-
-.futuristic-card-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  box-shadow:
-    0 0 20px rgba(0, 0, 0, 0.1),
-    0 0 40px rgba(0, 0, 0, 0.05);
-}
-
-/* Print styles */
-@media print {
-  @page {
-    size: A4;
-    margin: 10mm;
+@layer components {
+  .futuristic-card {
+    @apply relative overflow-hidden bg-white bg-opacity-10 backdrop-blur-md rounded-2xl border border-white border-opacity-20 shadow-glass transition-all duration-300 hover:shadow-neon hover:scale-[1.02];
   }
   
-  body {
+  .futuristic-card-solid {
+    @apply relative overflow-hidden bg-white rounded-2xl border border-slate-200 shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+  }
+  
+  .futuristic-card-accent {
+    @apply relative overflow-hidden rounded-2xl border transition-all duration-300 hover:scale-[1.02];
+  }
+
+  .futuristic-grid-bg {
+    @apply bg-futuristic-grid bg-[length:30px_30px];
+  }
+  
+  .glass-effect {
+    @apply bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20;
+  }
+  
+  .futuristic-button {
+    @apply px-6 py-2.5 rounded-full font-medium transition-all duration-300 hover:shadow-neon active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .stat-card {
+    @apply relative overflow-hidden p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-neon hover:scale-[1.02];
+  }
+}
+
+/* Print Styles - Enhanced for exact matching between preview and print */
+@media print {
+  /* Page setup */
+  @page {
+    size: portrait;
+    margin: 10mm;
+    margin-top: 5mm; 
+  }
+  
+  html, body {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background-color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
-  .print-hidden {
+  /* Hide all content by default */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Main print content containers */
+  .print-container,
+  .print-page-content {
+    visibility: visible !important;
+    display: block !important;
+    position: static !important; /* Changed from absolute to static */
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background-color: white !important;
+    color: black !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Show all elements within print containers */
+  .print-container *,
+  .print-page-content * {
+    visibility: visible !important;
+    display: revert !important;
+    overflow: visible !important;
+    color: inherit !important;
+  }
+  
+  /* Hide UI elements that shouldn't appear in print */
+  .print-hidden,
+  button:not(.print-show) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Handle images in print */
+  img {
+    max-width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  .print-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 1em !important;
+    position: relative !important;
+    top: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Table print styles */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    display: table !important;
+  }
+  
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+  
+  th, td {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+  
+  thead {
+    display: table-header-group !important;
+  }
+  
+  /* Preserve all tables */
+  table, tr, td, th, thead, tbody {
+    break-inside: avoid !important;
+  }
+  
+  /* Preserve colors in print */
+  .bg-gray-50,
+  .bg-gray-100 {
+    background-color: #f9fafb !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Preserve text colors in print */
+  .text-red-500 {
+    color: #ef4444 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Gradient coloring for header/footer bars */
+  .bg-gradient-to-r {
+    background: linear-gradient(to right, #dc2626, #2563eb, #22c55e) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Dialog print styles */
+  [role="dialog"],
+  dialog,
+  [data-radix-dialog-content] {
+    position: absolute !important; 
+    max-height: none !important;
+    max-width: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    transform: none !important;
+  }
+  
+  /* Hide dialog overlays */
+  [data-radix-dialog-overlay] {
     display: none !important;
   }
   
-  .print-page-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: relative !important;
-    overflow: visible !important;
-  }
-  
-  /* Make sure dialog content is properly sized for print */
-  [role="dialog"] {
-    position: absolute !important;
-    inset: 0 !important;
-    display: block !important;
-    padding: 0 !important;
-    background: white !important;
-    max-height: none !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-  
-  /* Hide dialog backdrop during print */
-  [data-radix-popper-content-wrapper] {
-    position: static !important;
-    transform: none !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+  /* Special margins for no-header mode */
+  .print-page-content[class*="pt-16"] {
+    padding-top: 3cm !important; /* Add top margin for pre-printed paper */
   }
 }
