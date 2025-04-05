@@ -659,7 +659,7 @@ const CompactRegisterPatient = () => {
                   value={paymentData.remarks}
                   onChange={handlePaymentChange}
                   className="bg-yellow-50 border-gray-200"
-                  rows={0.5}
+                  rows={1}
                 />
               </div>
             </div>
